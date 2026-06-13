@@ -1,0 +1,6 @@
+# Bundles are large (4.6 GB, several >100MB) — hosted as GitHub Release
+# assets, not in-repo. See README / restore.sh.
+bundles/
+build.log
+.tmp*/
+.tmp_retry/
