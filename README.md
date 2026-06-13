@@ -38,7 +38,7 @@ Generated 2026-06-13 from github.com/mfrancime.
 | 16 | `trident_claude-skill-fullstack_app_scaffolding` | https://github.com/mfrancime/trident_claude-skill-fullstack_app_scaffolding |
 | 17 | `trident_claude-skill-multimodal_report_generation` | https://github.com/mfrancime/trident_claude-skill-multimodal_report_generation |
 | 18 | `trident_claw-code_claude_code_harness` | https://github.com/mfrancime/trident_claw-code_claude_code_harness |
-| 19 | `Trident_colleague-skill` | https://github.com/mfrancime/Trident_colleague-skill |
+| 19 | `trident_colleague-skill` | https://github.com/mfrancime/trident_colleague-skill |
 | 20 | `trident_crucix_personal_intelligence_monitor` | https://github.com/mfrancime/trident_crucix_personal_intelligence_monitor |
 | 21 | `trident_ctm_continuous_thought_reasoning` | https://github.com/mfrancime/trident_ctm_continuous_thought_reasoning |
 | 22 | `trident_cv-analyzer_resume_job_matching` | https://github.com/mfrancime/trident_cv-analyzer_resume_job_matching |
@@ -63,7 +63,7 @@ Generated 2026-06-13 from github.com/mfrancime.
 | 41 | `trident_maestro_netflix_workflow_orchestrator` | https://github.com/mfrancime/trident_maestro_netflix_workflow_orchestrator |
 | 42 | `trident_malware-dev_ethical_hacking_guide` | https://github.com/mfrancime/trident_malware-dev_ethical_hacking_guide |
 | 43 | `trident_map-of-zones_cosmos_ibc_visualizer` | https://github.com/mfrancime/trident_map-of-zones_cosmos_ibc_visualizer |
-| 44 | `Trident_markitdown` | https://github.com/mfrancime/Trident_markitdown |
+| 44 | `trident_markitdown` | https://github.com/mfrancime/trident_markitdown |
 | 45 | `trident_openhuman` | https://github.com/mfrancime/trident_openhuman |
 | 46 | `trident_orcaclaw_sakana_personal_ai_assistant` | https://github.com/mfrancime/trident_orcaclaw_sakana_personal_ai_assistant |
 | 47 | `trident_pokeclaw_ondevice_android_ai` | https://github.com/mfrancime/trident_pokeclaw_ondevice_android_ai |
@@ -82,7 +82,7 @@ Generated 2026-06-13 from github.com/mfrancime.
 | 60 | `trident_superpowers_agentic_skills_framework` | https://github.com/mfrancime/trident_superpowers_agentic_skills_framework |
 | 61 | `trident_system-design_interview_primer` | https://github.com/mfrancime/trident_system-design_interview_primer |
 | 62 | `trident_system-prompts_ai_tools_collection` | https://github.com/mfrancime/trident_system-prompts_ai_tools_collection |
-| 63 | `Trident_thunderbolt` | https://github.com/mfrancime/Trident_thunderbolt |
+| 63 | `trident_thunderbolt` | https://github.com/mfrancime/trident_thunderbolt |
 | 64 | `trident_understand-Anything` | https://github.com/mfrancime/trident_understand-Anything |
 | 65 | `trident_unsloth_local_llm_training_studio` | https://github.com/mfrancime/trident_unsloth_local_llm_training_studio |
 | 66 | `trident_vibe-trading_personal_trading_agent` | https://github.com/mfrancime/trident_vibe-trading_personal_trading_agent |
