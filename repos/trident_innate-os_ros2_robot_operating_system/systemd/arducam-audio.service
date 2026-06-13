@@ -1,0 +1,21 @@
+[Unit]
+Description=Arducam Microphone Audio Setup
+Documentation=https://github.com/innate-inc/innate-os
+# Run after sound hardware is available
+After=sound.target alsa-restore.service
+# Don't fail if these don't exist
+Wants=sound.target
+
+[Service]
+Type=oneshot
+# Small delay to ensure audio hardware is fully initialized
+ExecStartPre=/bin/sleep 3
+ExecStart=/home/jetson1/innate-os/scripts/update/setup_arducam.sh
+RemainAfterExit=yes
+# Run as the actual user for ALSA access
+# NOTE: User and paths are updated by post_update.sh during install
+User=jetson1
+
+[Install]
+WantedBy=multi-user.target
+

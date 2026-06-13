@@ -1,0 +1,104 @@
+# Colcon build and install directories
+build/
+install/
+log/
+
+# Generated CLI artifacts
+scripts/build/
+ros2_ws/src/brain/manipulation/ckpts/*
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE specific files
+.idea/
+*.swp
+*.swo
+*~
+
+# ROS 2 specific
+.ros/
+.catkin_workspace
+
+# System specific
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dll
+*.dylib
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Environment files
+.env
+.venv/
+ENV/
+deploy-keys/
+
+# PyTorch model weights and checkpoints
+*.pt
+*.pth
+*.ckpt
+*.pkl
+*.bin
+*.h5
+weights/
+checkpoints/
+runs/
+ros2_ws/src/brain/manipulation/ckpts/*
+
+# training data
+data/
+
+# Primitives directory - ignore checkpoints and data symlinks, keep metadata
+skills/**/data
+skills/**/action_only/
+skills/**/*.h5
+skills/**/*.pt
+skills/**/*.pth
+skills/**/__pycache__/
+
+# Directives directory - track all directive files
+agents/**/__pycache__/
+
+# recordings folder
+recordings/
+
+#other werid files
+*.mp4
+
+logs
+
+.last_map
+.last_mode
+.onnx
+
+# arm_wave directory (local data, not tracked)
+arm_wave/
+
+.vscode

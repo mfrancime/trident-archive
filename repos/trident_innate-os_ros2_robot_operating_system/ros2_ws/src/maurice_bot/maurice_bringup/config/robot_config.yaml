@@ -1,0 +1,16 @@
+/**:
+  ros__parameters:
+    i2c:
+      bus_number: 1
+      device_address: 0x42
+      update_frequency: 30.0
+    battery:
+      num_cells: 3
+      warning_percentage: 20
+      critical_percentage: 10
+    motion_control:
+      max_speed: 0.4
+      max_angular_speed: 2.5
+    ros_topics:
+      odom_frequency: 30.0
+      battery_state_frequency: 0.2

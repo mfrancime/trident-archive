@@ -1,0 +1,3 @@
+#!/bin/bash
+# Backward-compatible wrapper — delegates everything to the main CLI.
+exec innate update "$@"
