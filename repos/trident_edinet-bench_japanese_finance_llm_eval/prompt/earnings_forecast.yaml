@@ -1,0 +1,15 @@
+prompt: |
+  Please predict whether the "親会社株主に帰属する当期純利益" (Net income attributable to owners of the parent) in the next fiscal year's securities report will increase compared to the current fiscal year, based on the information available in the current year's securities report.
+  - The input is extracted from a Japanese company's securities report.
+  - Some information may be missing and represented as "-" due to parsing errors.
+  - Some attributes are missing and the total does not equal the sum of the parts.
+  Respond in the following format:
+  JSON:
+  ```json
+  {
+    "reasoning": "string",
+    "prob": float (between 0 and 1, probability that the profit will increase),
+    "prediction": int (0: Decrease, 1: Increase)
+  }
+  ```
+  The current year's extracted securities report is as follows:

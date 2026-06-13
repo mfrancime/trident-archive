@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: dataset
+title: "EDINET-Bench: Evaluating LLMs on Complex Financial Tasks using Japanese Financial Statements"
+authors:
+  - family-names: Sugiura
+    given-names: Issa
+  - family-names: Ishida
+    given-names: Takashi
+  - family-names: Makino
+    given-names: Taro
+  - family-names: Tazuke
+    given-names: Chieko
+  - family-names: Nakagawa
+    given-names: Takanori
+  - family-names: Nakago
+    given-names: Kosuke
+  - family-names: Ha
+    given-names: David
+url: "https://openreview.net/forum?id=Dxns0cj15A"
+keywords:
+  - "financial analysis"
+  - "large language models"
+  - "benchmark"
+  - "Japanese"
+  - "EDINET"
+license: Apache-2.0

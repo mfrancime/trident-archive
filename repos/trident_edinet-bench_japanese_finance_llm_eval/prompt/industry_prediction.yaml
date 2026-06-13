@@ -1,0 +1,16 @@
+prompt: |
+  Based on the following financial report, classify the company into one of the Japanese industry categories.
+  You must classify the company into exactly one of these categories: ["食品", "電気・ガス・エネルギー資源", "建設・資材", "素材・化学", "医薬品", "自動車・輸送機", "鉄鋼・非鉄", "機械", "電機・精密", "情報通信・サービスその他", "運輸・物流", "商社・卸売", "小売", "銀行", "金融(除く銀行)", "不動産"]
+  - The input is extracted from a Japanese company's securities report.
+  - Some information may be missing due to parsing errors.
+  Respond in the following format:
+  JSON:
+  ```json
+  {
+    "reasoning": str (reasoning for the classification),
+    "prediction": str (predicted industry category in Japanese)
+  }
+  ```
+  The current year's extracted securities report is as follows:
+
+

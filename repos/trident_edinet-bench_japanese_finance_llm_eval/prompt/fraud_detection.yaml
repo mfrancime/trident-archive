@@ -1,0 +1,14 @@
+prompt: |
+  Please analyze the following information extracted from a Japanese company's securities report for any signs of fraudulent activities.
+  Please note that some data may be missing and represented as "-" due to parsing errors.
+  The report has been verified by a certified public accountant, and the numerical values are consistent and correct from a calculation perspective. Therefore, please focus your analysis on non-numerical inconsistencies or logical red flags that could suggest fraud.
+  Respond in the following format:
+  JSON:
+  ```json
+  {
+    "reasoning": "string",
+    "prob": float (between 0 and 1, probability that the report is fraudulent),
+    "prediction": int (0: No fraud, 1: fraud)
+  }
+  ```
+  The extracted securities report is as follows:
