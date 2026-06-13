@@ -1,0 +1,17 @@
+analysis/
+assets/
+join_discord_draft.md
+report.html
+position_sizer.html
+test*
+token.json
+credentials.json
+BreakOutAnalysisZip.zip
+src/testscripts
+src/notifications/email_notify.json
+insta_profiles.html
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+config/config.json
