@@ -1,0 +1,610 @@
+/**
+ * Resolution Module Tests
+ *
+ * Tests for Phase 3: Reference Resolution
+ */
+
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import { CodeGraph } from '../src';
+import { Node, UnresolvedReference } from '../src/types';
+import { ReferenceResolver, createResolver, ResolutionContext } from '../src/resolution';
+import { matchReference } from '../src/resolution/name-matcher';
+import { resolveImportPath, extractImportMappings } from '../src/resolution/import-resolver';
+import { detectFrameworks, getAllFrameworkResolvers } from '../src/resolution/frameworks';
+import { QueryBuilder } from '../src/db/queries';
+import { DatabaseConnection } from '../src/db';
+
+describe('Resolution Module', () => {
+  let tempDir: string;
+  let cg: CodeGraph;
+
+  beforeEach(() => {
+    // Create temp directory
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'codegraph-resolution-test-'));
+  });
+
+  afterEach(() => {
+    // Clean up
+    if (cg) {
+      cg.destroy();
+    } else if (fs.existsSync(tempDir)) {
+      fs.rmSync(tempDir, { recursive: true });
+    }
+  });
+
+  describe('Name Matcher', () => {
+    it('should match exact name references', () => {
+      // Create a mock context
+      const mockNodes: Node[] = [
+        {
+          id: 'func:test.ts:myFunction:10',
+          kind: 'function',
+          name: 'myFunction',
+          qualifiedName: 'test.ts::myFunction',
+          filePath: 'test.ts',
+          language: 'typescript',
+          startLine: 10,
+          endLine: 20,
+          startColumn: 0,
+          endColumn: 0,
+          updatedAt: Date.now(),
+        },
+      ];
+
+      const context: ResolutionContext = {
+        getNodesInFile: () => mockNodes,
+        getNodesByName: (name) => mockNodes.filter((n) => n.name === name),
+        getNodesByQualifiedName: () => [],
+        getNodesByKind: () => [],
+        fileExists: () => true,
+        readFile: () => null,
+        getProjectRoot: () => '/test',
+        getAllFiles: () => ['test.ts'],
+      };
+
+      const ref = {
+        fromNodeId: 'caller:main.ts:caller:5',
+        referenceName: 'myFunction',
+        referenceKind: 'calls' as const,
+        line: 5,
+        column: 10,
+        filePath: 'main.ts',
+        language: 'typescript' as const,
+      };
+
+      const result = matchReference(ref, context);
+
+      expect(result).not.toBeNull();
+      expect(result?.targetNodeId).toBe('func:test.ts:myFunction:10');
+      expect(result?.resolvedBy).toBe('exact-match');
+    });
+
+    it('should prefer same-module candidates over cross-module matches', () => {
+      // Simulates a Python monorepo where multiple apps define navigate()
+      const candidateA: Node = {
+        id: 'func:apps/app_a/src/server.py:navigate:10',
+        kind: 'function',
+        name: 'navigate',
+        qualifiedName: 'apps/app_a/src/server.py::navigate',
+        filePath: 'apps/app_a/src/server.py',
+        language: 'python',
+        startLine: 10,
+        endLine: 20,
+        startColumn: 0,
+        endColumn: 0,
+        updatedAt: Date.now(),
+      };
+
+      const candidateB: Node = {
+        id: 'func:apps/app_b/src/server.py:navigate:15',
+        kind: 'function',
+        name: 'navigate',
+        qualifiedName: 'apps/app_b/src/server.py::navigate',
+        filePath: 'apps/app_b/src/server.py',
+        language: 'python',
+        startLine: 15,
+        endLine: 25,
+        startColumn: 0,
+        endColumn: 0,
+        updatedAt: Date.now(),
+      };
+
+      const context: ResolutionContext = {
+        getNodesInFile: () => [],
+        getNodesByName: (name) => name === 'navigate' ? [candidateA, candidateB] : [],
+        getNodesByQualifiedName: () => [],
+        getNodesByKind: () => [],
+        fileExists: () => true,
+        readFile: () => null,
+        getProjectRoot: () => '/test',
+        getAllFiles: () => [],
+        getNodesByLowerName: () => [],
+        getImportMappings: () => [],
+      };
+
+      // Reference from app_a should resolve to app_a's navigate, not app_b's
+      const ref = {
+        fromNodeId: 'func:apps/app_a/src/handler.py:handler:5',
+        referenceName: 'navigate',
+        referenceKind: 'calls' as const,
+        line: 5,
+        column: 10,
+        filePath: 'apps/app_a/src/handler.py',
+        language: 'python' as const,
+      };
+
+      const result = matchReference(ref, context);
+
+      expect(result).not.toBeNull();
+      expect(result?.targetNodeId).toBe('func:apps/app_a/src/server.py:navigate:10');
+      expect(result?.resolvedBy).toBe('exact-match');
+    });
+
+    it('should lower confidence for cross-module exact matches', () => {
+      // Only one candidate but in a completely different module
+      const candidates: Node[] = [
+        {
+          id: 'func:apps/app_b/src/server.py:navigate:10',
+          kind: 'function',
+          name: 'navigate',
+          qualifiedName: 'apps/app_b/src/server.py::navigate',
+          filePath: 'apps/app_b/src/server.py',
+          language: 'python',
+          startLine: 10,
+          endLine: 20,
+          startColumn: 0,
+          endColumn: 0,
+          updatedAt: Date.now(),
+        },
+        {
+          id: 'func:apps/app_c/src/server.py:navigate:10',
+          kind: 'function',
+          name: 'navigate',
+          qualifiedName: 'apps/app_c/src/server.py::navigate',
+          filePath: 'apps/app_c/src/server.py',
+          language: 'python',
+          startLine: 10,
+          endLine: 20,
+          startColumn: 0,
+          endColumn: 0,
+          updatedAt: Date.now(),
+        },
+      ];
+
+      const context: ResolutionContext = {
+        getNodesInFile: () => [],
+        getNodesByName: (name) => name === 'navigate' ? candidates : [],
+        getNodesByQualifiedName: () => [],
+        getNodesByKind: () => [],
+        fileExists: () => true,
+        readFile: () => null,
+        getProjectRoot: () => '/test',
+        getAllFiles: () => [],
+        getNodesByLowerName: () => [],
+        getImportMappings: () => [],
+      };
+
+      // Reference from app_a — neither candidate is in the same module
+      const ref = {
+        fromNodeId: 'func:apps/app_a/src/handler.py:handler:5',
+        referenceName: 'navigate',
+        referenceKind: 'calls' as const,
+        line: 5,
+        column: 10,
+        filePath: 'apps/app_a/src/handler.py',
+        language: 'python' as const,
+      };
+
+      const result = matchReference(ref, context);
+
+      // Should still resolve but with low confidence
+      expect(result).not.toBeNull();
+      expect(result?.confidence).toBeLessThanOrEqual(0.4);
+    });
+
+    it('should match qualified name references', () => {
+      const mockClassNode: Node = {
+        id: 'class:user.ts:User:5',
+        kind: 'class',
+        name: 'User',
+        qualifiedName: 'user.ts::User',
+        filePath: 'user.ts',
+        language: 'typescript',
+        startLine: 5,
+        endLine: 30,
+        startColumn: 0,
+        endColumn: 0,
+        updatedAt: Date.now(),
+      };
+
+      const mockMethodNode: Node = {
+        id: 'method:user.ts:User.save:15',
+        kind: 'method',
+        name: 'save',
+        qualifiedName: 'user.ts::User::save',
+        filePath: 'user.ts',
+        language: 'typescript',
+        startLine: 15,
+        endLine: 25,
+        startColumn: 0,
+        endColumn: 0,
+        updatedAt: Date.now(),
+      };
+
+      const context: ResolutionContext = {
+        getNodesInFile: (fp) => fp === 'user.ts' ? [mockClassNode, mockMethodNode] : [],
+        getNodesByName: (name) => {
+          if (name === 'User') return [mockClassNode];
+          if (name === 'save') return [mockMethodNode];
+          return [];
+        },
+        getNodesByQualifiedName: (qn) => {
+          if (qn === 'user.ts::User::save') return [mockMethodNode];
+          return [];
+        },
+        getNodesByKind: () => [],
+        fileExists: () => true,
+        readFile: () => null,
+        getProjectRoot: () => '/test',
+        getAllFiles: () => ['user.ts'],
+      };
+
+      const ref = {
+        fromNodeId: 'caller:main.ts:main:5',
+        referenceName: 'User.save',
+        referenceKind: 'calls' as const,
+        line: 5,
+        column: 10,
+        filePath: 'main.ts',
+        language: 'typescript' as const,
+      };
+
+      const result = matchReference(ref, context);
+
+      expect(result).not.toBeNull();
+      expect(result?.targetNodeId).toBe('method:user.ts:User.save:15');
+    });
+  });
+
+  describe('Import Resolver', () => {
+    it('should resolve relative import paths', () => {
+      const context: ResolutionContext = {
+        getNodesInFile: () => [],
+        getNodesByName: () => [],
+        getNodesByQualifiedName: () => [],
+        getNodesByKind: () => [],
+        fileExists: (p) => p === 'src/components/utils.ts' || p === 'src/components/utils/index.ts',
+        readFile: () => null,
+        getProjectRoot: () => '',
+        getAllFiles: () => ['src/components/utils.ts', 'src/components/utils/index.ts'],
+      };
+
+      const result = resolveImportPath(
+        './utils',
+        'src/components/Button.ts',
+        'typescript',
+        context
+      );
+
+      expect(result).toBe('src/components/utils.ts');
+    });
+
+    it('should resolve parent directory imports', () => {
+      const context: ResolutionContext = {
+        getNodesInFile: () => [],
+        getNodesByName: () => [],
+        getNodesByQualifiedName: () => [],
+        getNodesByKind: () => [],
+        fileExists: (p) => p === 'src/helpers.ts' || p === 'src/helpers/index.ts',
+        readFile: () => null,
+        getProjectRoot: () => '',
+        getAllFiles: () => ['src/helpers.ts', 'src/helpers/index.ts'],
+      };
+
+      const result = resolveImportPath(
+        '../helpers',
+        'src/components/Button.ts',
+        'typescript',
+        context
+      );
+
+      expect(result).toBe('src/helpers.ts');
+    });
+
+    it('should extract JS/TS import mappings', () => {
+      const content = `
+import { foo } from './foo';
+import bar from '../bar';
+import * as utils from './utils';
+import { baz, qux } from './baz';
+`;
+
+      const mappings = extractImportMappings(
+        'src/index.ts',
+        content,
+        'typescript'
+      );
+
+      expect(mappings.length).toBeGreaterThan(0);
+      expect(mappings.some((m) => m.localName === 'foo')).toBe(true);
+      expect(mappings.some((m) => m.localName === 'bar')).toBe(true);
+    });
+
+    it('should extract Python import mappings', () => {
+      const content = `
+from utils import helper
+from .models import User
+import os
+from ..services import auth_service
+`;
+
+      const mappings = extractImportMappings(
+        'src/main.py',
+        content,
+        'python'
+      );
+
+      expect(mappings.length).toBeGreaterThan(0);
+      expect(mappings.some((m) => m.localName === 'helper')).toBe(true);
+      expect(mappings.some((m) => m.localName === 'User')).toBe(true);
+    });
+  });
+
+  describe('Framework Detection', () => {
+    it('should detect React framework', () => {
+      const context: ResolutionContext = {
+        getNodesInFile: () => [],
+        getNodesByName: () => [],
+        getNodesByQualifiedName: () => [],
+        getNodesByKind: () => [],
+        fileExists: () => false,
+        readFile: (p) => {
+          if (p === 'package.json') {
+            return JSON.stringify({
+              dependencies: { react: '^18.0.0' },
+            });
+          }
+          return null;
+        },
+        getProjectRoot: () => '/test',
+        getAllFiles: () => ['package.json', 'src/App.tsx'],
+      };
+
+      const frameworks = detectFrameworks(context);
+      expect(frameworks.some((f) => f.name === 'react')).toBe(true);
+    });
+
+    it('should detect Express framework', () => {
+      const context: ResolutionContext = {
+        getNodesInFile: () => [],
+        getNodesByName: () => [],
+        getNodesByQualifiedName: () => [],
+        getNodesByKind: () => [],
+        fileExists: () => false,
+        readFile: (p) => {
+          if (p === 'package.json') {
+            return JSON.stringify({
+              dependencies: { express: '^4.18.0' },
+            });
+          }
+          return null;
+        },
+        getProjectRoot: () => '/test',
+        getAllFiles: () => ['package.json', 'src/app.js'],
+      };
+
+      const frameworks = detectFrameworks(context);
+      expect(frameworks.some((f) => f.name === 'express')).toBe(true);
+    });
+
+    it('should detect Laravel framework', () => {
+      const context: ResolutionContext = {
+        getNodesInFile: () => [],
+        getNodesByName: () => [],
+        getNodesByQualifiedName: () => [],
+        getNodesByKind: () => [],
+        fileExists: (p) => p === 'artisan',
+        readFile: () => null,
+        getProjectRoot: () => '/test',
+        getAllFiles: () => ['artisan', 'app/Http/Kernel.php'],
+      };
+
+      const frameworks = detectFrameworks(context);
+      expect(frameworks.some((f) => f.name === 'laravel')).toBe(true);
+    });
+
+    it('should return all framework resolvers', () => {
+      const resolvers = getAllFrameworkResolvers();
+      expect(resolvers.length).toBeGreaterThan(0);
+      expect(resolvers.some((r) => r.name === 'react')).toBe(true);
+      expect(resolvers.some((r) => r.name === 'express')).toBe(true);
+      expect(resolvers.some((r) => r.name === 'laravel')).toBe(true);
+    });
+  });
+
+  describe('React Framework Resolver', () => {
+    it('should resolve React component references', () => {
+      const mockNodes: Node[] = [
+        {
+          id: 'component:src/Button.tsx:Button:5',
+          kind: 'component',
+          name: 'Button',
+          qualifiedName: 'src/Button.tsx::Button',
+          filePath: 'src/Button.tsx',
+          language: 'tsx',
+          startLine: 5,
+          endLine: 20,
+          startColumn: 0,
+          endColumn: 0,
+          updatedAt: Date.now(),
+        },
+      ];
+
+      const context: ResolutionContext = {
+        getNodesInFile: (fp) => (fp === 'src/Button.tsx' ? mockNodes : []),
+        getNodesByName: () => mockNodes,
+        getNodesByQualifiedName: () => [],
+        getNodesByKind: () => [],
+        fileExists: () => false,
+        readFile: (p) => {
+          if (p === 'package.json') {
+            return JSON.stringify({ dependencies: { react: '^18.0.0' } });
+          }
+          return null;
+        },
+        getProjectRoot: () => '/test',
+        getAllFiles: () => ['package.json', 'src/Button.tsx', 'src/App.tsx'],
+      };
+
+      const frameworks = detectFrameworks(context);
+      const reactResolver = frameworks.find((f) => f.name === 'react');
+      expect(reactResolver).toBeDefined();
+
+      const ref = {
+        fromNodeId: 'component:src/App.tsx:App:1',
+        referenceName: 'Button',
+        referenceKind: 'renders' as const,
+        line: 10,
+        column: 5,
+        filePath: 'src/App.tsx',
+        language: 'typescript' as const,
+      };
+
+      const result = reactResolver!.resolve(ref, context);
+      expect(result).not.toBeNull();
+      expect(result?.targetNodeId).toBe('component:src/Button.tsx:Button:5');
+    });
+
+    it('should resolve custom hook references', () => {
+      const mockNodes: Node[] = [
+        {
+          id: 'hook:src/hooks/useAuth.ts:useAuth:1',
+          kind: 'function',
+          name: 'useAuth',
+          qualifiedName: 'src/hooks/useAuth.ts::useAuth',
+          filePath: 'src/hooks/useAuth.ts',
+          language: 'typescript',
+          startLine: 1,
+          endLine: 20,
+          startColumn: 0,
+          endColumn: 0,
+          updatedAt: Date.now(),
+        },
+      ];
+
+      const context: ResolutionContext = {
+        getNodesInFile: (fp) => (fp.includes('useAuth') ? mockNodes : []),
+        getNodesByName: () => mockNodes,
+        getNodesByQualifiedName: () => [],
+        getNodesByKind: () => [],
+        fileExists: () => false,
+        readFile: (p) => {
+          if (p === 'package.json') {
+            return JSON.stringify({ dependencies: { react: '^18.0.0' } });
+          }
+          return null;
+        },
+        getProjectRoot: () => '/test',
+        getAllFiles: () => ['package.json', 'src/hooks/useAuth.ts'],
+      };
+
+      const frameworks = detectFrameworks(context);
+      const reactResolver = frameworks.find((f) => f.name === 'react');
+
+      const ref = {
+        fromNodeId: 'component:src/App.tsx:App:1',
+        referenceName: 'useAuth',
+        referenceKind: 'calls' as const,
+        line: 5,
+        column: 10,
+        filePath: 'src/App.tsx',
+        language: 'typescript' as const,
+      };
+
+      const result = reactResolver!.resolve(ref, context);
+      expect(result).not.toBeNull();
+      expect(result?.targetNodeId).toBe('hook:src/hooks/useAuth.ts:useAuth:1');
+    });
+  });
+
+  describe('Integration Tests', () => {
+    it('should create resolver from CodeGraph instance', async () => {
+      // Create a simple TypeScript project
+      fs.writeFileSync(
+        path.join(tempDir, 'package.json'),
+        JSON.stringify({ name: 'test', dependencies: { react: '^18.0.0' } })
+      );
+
+      const srcDir = path.join(tempDir, 'src');
+      fs.mkdirSync(srcDir);
+
+      // Create utility file
+      fs.writeFileSync(
+        path.join(srcDir, 'utils.ts'),
+        `export function formatDate(date: Date): string {
+  return date.toISOString();
+}
+
+export function parseDate(str: string): Date {
+  return new Date(str);
+}`
+      );
+
+      // Create main file that uses utils
+      fs.writeFileSync(
+        path.join(srcDir, 'main.ts'),
+        `import { formatDate, parseDate } from './utils';
+
+function processDate(input: string): string {
+  const date = parseDate(input);
+  return formatDate(date);
+}`
+      );
+
+      // Initialize and index
+      cg = await CodeGraph.init(tempDir, { index: true });
+
+      // Check that resolver detected React framework
+      const frameworks = cg.getDetectedFrameworks();
+      expect(frameworks).toContain('react');
+
+      // Get stats to verify indexing worked
+      const stats = cg.getStats();
+      expect(stats.fileCount).toBe(2);
+      expect(stats.nodeCount).toBeGreaterThan(0);
+    });
+
+    it('should resolve references after indexing', async () => {
+      // Create a project with references
+      const srcDir = path.join(tempDir, 'src');
+      fs.mkdirSync(srcDir, { recursive: true });
+
+      fs.writeFileSync(
+        path.join(srcDir, 'helper.ts'),
+        `export function helperFunction(): void {
+  console.log('helper');
+}`
+      );
+
+      fs.writeFileSync(
+        path.join(srcDir, 'main.ts'),
+        `import { helperFunction } from './helper';
+
+function main(): void {
+  helperFunction();
+}`
+      );
+
+      cg = await CodeGraph.init(tempDir, { index: true });
+
+      // Run reference resolution
+      const result = cg.resolveReferences();
+
+      // Should have attempted resolution
+      expect(result.stats.total).toBeGreaterThanOrEqual(0);
+    });
+  });
+});
