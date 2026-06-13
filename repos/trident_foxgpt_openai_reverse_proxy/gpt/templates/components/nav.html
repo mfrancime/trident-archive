@@ -1,0 +1,24 @@
+<nav>
+    <div class="content">
+        <a href="/#" class="{{ 'active' if title == 'Home' else '' }}">Home</a>
+        <a href="/#examples">Examples</a>
+        <a href="/#features">Features</a>
+        <a href="/#faq">FAQ</a>
+
+        <div class="right">
+            <a href="/donate" class="{{ 'active' if title == 'Donate' else '' }}">
+                Donate ❤️   </a>
+            <a href="https://github.com/foxgpt/gpt" target="_blank">
+                Open Source&nbsp;
+                <i class="bi bi-arrow-up-short"></i>
+            </a>
+            <a href="https://discord.gg/E8E2TnE75D" target="_blank">
+                Help (Discord)&nbsp;
+                <i class="bi bi-arrow-up-short"></i>
+            </a>
+        </div>
+    </div>
+    <div class="mobile-nav" onclick="mobileNav();">
+        <i class="bi bi-list"></i>
+    </div>
+</nav>

@@ -1,0 +1,323 @@
+name: Android Release
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 1.2.3 without v prefix)'
+        required: true
+        type: string
+      nightly:
+        description: 'Is this a nightly build?'
+        required: false
+        default: false
+        type: boolean
+      notify_testers:
+        description: 'Notify external testers'
+        required: false
+        default: false
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 1.2.3 without v prefix)'
+        required: true
+        type: string
+      version_type:
+        description: 'Type of version bump (auto, patch, minor, major)'
+        required: false
+        type: choice
+        default: 'auto'
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+      notify_testers:
+        description: 'Notify external testers'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: android-release-${{ inputs.version }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build_and_deploy_android:
+    runs-on: ubuntu-latest
+    environment: thunderbolt_release
+    outputs:
+      build_version: ${{ steps.determine_version.outputs.build_version }}
+
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android/sdk/ndk/27*
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf /usr/local/share/boost
+          sudo docker system prune -af || true
+          df -h
+
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          ref: v${{ inputs.version }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
+        with:
+          node-version: 'lts/*'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # using commit hash for security reasons
+
+      - name: Display version information
+        env:
+          INPUT_NIGHTLY: ${{ inputs.nightly }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$INPUT_NIGHTLY" == "true" ]; then
+            echo "🌙 Nightly build"
+          fi
+          if [ -n "$INPUT_VERSION" ]; then
+            echo "🏷️ Using specified version: $INPUT_VERSION"
+          else
+            CURRENT_VERSION=$(node -p "require('./package.json').version")
+            echo "📦 Current version: $CURRENT_VERSION"
+          fi
+
+      - name: Determine build version
+        id: determine_version
+        uses: ./.github/actions/determine-version
+        with:
+          version: ${{ inputs.version }}
+          version_type: ${{ inputs.version_type }}
+
+      - name: Export build version env
+        env:
+          BUILD_VERSION: ${{ steps.determine_version.outputs.build_version }}
+        run: echo "BUILD_VERSION=$BUILD_VERSION" >> $GITHUB_ENV
+
+      - name: Calculate versionCode from git history
+        id: version_code
+        run: |
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          # Base offset to ensure we stay above previous manual versionCode (1018)
+          # Using 1000 as base means we start at 2626 (2000 + 626 commits)
+          BASE_OFFSET=2000
+          VERSION_CODE=$((BASE_OFFSET + COMMIT_COUNT))
+          echo "versionCode=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "📱 Calculated versionCode: $VERSION_CODE (base $BASE_OFFSET + $COMMIT_COUNT commits)"
+
+      - name: Set build version and versionCode locally for Android
+        run: |
+          VERSION="$BUILD_VERSION"
+          VERSION_CODE="${{ steps.version_code.outputs.versionCode }}"
+          echo "🔧 Applying version $VERSION and versionCode $VERSION_CODE locally for the build"
+
+          # Update package.json version
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = process.env.VERSION;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+          # Update Cargo.toml version
+          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
+
+          # Update tauri.conf.json with versionCode
+          node -e "
+            const fs = require('fs');
+            const path = 'src-tauri/tauri.conf.json';
+            const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+            data.bundle = data.bundle || {};
+            data.bundle.android = data.bundle.android || {};
+            data.bundle.android.versionCode = Number(process.env.VERSION_CODE);
+            fs.writeFileSync(path, JSON.stringify(data, null, 2) + '\n');
+            console.log('✅ Set versionCode to', data.bundle.android.versionCode);
+          "
+        env:
+          VERSION_CODE: ${{ steps.version_code.outputs.versionCode }}
+
+      - name: Update tauri.properties with correct version
+        run: |
+          VERSION="$BUILD_VERSION"
+          VERSION_CODE="${{ steps.version_code.outputs.versionCode }}"
+          PROPS_FILE="src-tauri/gen/android/app/tauri.properties"
+          echo "// THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY." > "$PROPS_FILE"
+          echo "tauri.android.versionName=$VERSION" >> "$PROPS_FILE"
+          echo "tauri.android.versionCode=$VERSION_CODE" >> "$PROPS_FILE"
+          echo "✅ Updated tauri.properties: versionName=$VERSION, versionCode=$VERSION_CODE"
+          cat "$PROPS_FILE"
+
+      - name: Setup Java
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+        with:
+          api-level: 36
+          build-tools: 36.0.0
+          ndk-version: 26.1.10909125
+
+      - name: Export Android SDK/NDK environment
+        run: |
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          NDK_PATH="$ANDROID_SDK_ROOT/ndk/26.1.10909125"
+          if [ ! -d "$NDK_PATH" ]; then
+            NDK_PATH=$(ls -d "$ANDROID_SDK_ROOT/ndk/"* | head -1)
+          fi
+          echo "NDK_HOME=$NDK_PATH" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$NDK_PATH" >> $GITHUB_ENV
+          echo "Using ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "Using NDK at $NDK_PATH"
+
+      - name: Install Rust stable toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@2b1f5e9b395427c92ee4e3331786ca3c37afe2d7 # v1
+        with:
+          toolchain: stable
+          cache: false
+          rustflags: ''
+
+      - name: Cache Cargo registry and build
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.0.2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-android-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-android-
+            ${{ runner.os }}-cargo-
+
+      - name: Install Android targets
+        run: |
+          rustup target add aarch64-linux-android
+          rustup target add armv7-linux-androideabi
+          rustup target add i686-linux-android
+          rustup target add x86_64-linux-android
+
+      - name: Setup Android signing
+        env:
+          ANDROID_UPLOAD_KEY: ${{ secrets.ANDROID_UPLOAD_KEY }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+        run: |
+          # Validate required secrets
+          if [ -z "$ANDROID_UPLOAD_KEY" ] || [ -z "$ANDROID_UPLOAD_KEY_ALIAS" ] || [ -z "$ANDROID_UPLOAD_KEY_PASSWORD" ]; then
+            echo "❌ Required Android secrets are not set"
+            exit 1
+          fi
+
+          # Create keystore directory
+          mkdir -p ~/.android
+
+          # Decode and install keystore
+          CLEAN_KEY=$(echo "$ANDROID_UPLOAD_KEY" | tr -d '\n\r\t ' | tr -d '[:space:]')
+          echo "$CLEAN_KEY" | base64 --decode > ~/.android/upload-keystore.jks
+
+          if [ ! -s ~/.android/upload-keystore.jks ]; then
+            echo "❌ Failed to decode Android keystore"
+            exit 1
+          fi
+
+          # Set permissions
+          chmod 600 ~/.android/upload-keystore.jks
+
+          # Export environment variables for Tauri build
+          echo "ANDROID_KEYSTORE_PATH=~/.android/upload-keystore.jks" >> $GITHUB_ENV
+          echo "ANDROID_KEY_ALIAS=$ANDROID_UPLOAD_KEY_ALIAS" >> $GITHUB_ENV
+          echo "ANDROID_KEY_PASSWORD=$ANDROID_UPLOAD_KEY_PASSWORD" >> $GITHUB_ENV
+
+      - name: Install frontend dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build frontend
+        run: |
+          echo "VITE_THUNDERBOLT_CLOUD_URL: $VITE_THUNDERBOLT_CLOUD_URL"
+          bun run build
+        env:
+          VITE_THUNDERBOLT_CLOUD_URL: ${{ vars.VITE_THUNDERBOLT_CLOUD_URL }}
+          NODE_OPTIONS: '--max-old-space-size=8192'
+
+      - name: Setup Android Signing Configuration
+        env:
+          ANDROID_UPLOAD_KEY: ${{ secrets.ANDROID_UPLOAD_KEY }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+        run: |
+          # Create signing.properties file for Android build
+          cat > src-tauri/gen/android/signing.properties << EOF
+          storeFile=../upload-keystore.jks
+          storePassword=$ANDROID_UPLOAD_KEY_PASSWORD
+          keyAlias=$ANDROID_UPLOAD_KEY_ALIAS
+          keyPassword=$ANDROID_UPLOAD_KEY_PASSWORD
+          EOF
+
+          # Copy keystore to Android project directory
+          cp ~/.android/upload-keystore.jks src-tauri/gen/android/upload-keystore.jks
+
+      - name: Build Tauri Android App
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ env.ANDROID_KEYSTORE_PATH }}
+          ANDROID_KEY_ALIAS: ${{ env.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ env.ANDROID_KEY_PASSWORD }}
+          RUSTC_WRAPPER: ''
+          SCCACHE_DISABLE: '1'
+          VITE_THUNDERBOLT_CLOUD_URL: ${{ vars.VITE_THUNDERBOLT_CLOUD_URL }}
+          NODE_OPTIONS: '--max-old-space-size=8192'
+        run: |
+          bun install --frozen-lockfile
+          bun tauri android build
+
+      - name: Find AAB file
+        id: find_aab
+        run: |
+          AAB_PATH=$(find src-tauri/gen/android/app/build/outputs -name "*.aab" -type f | head -1)
+          if [ -f "$AAB_PATH" ]; then
+            echo "📱 Found AAB file: $AAB_PATH"
+            echo "aab_path=$AAB_PATH" >> $GITHUB_OUTPUT
+          else
+            echo "❌ No AAB file found in Android build outputs directory"
+            echo "Available AAB files:"
+            find src-tauri/gen/android -name "*.aab" -type f
+            exit 1
+          fi
+
+      - name: Upload to Google Play Store
+        uses: ./.github/actions/upload-to-play
+        with:
+          serviceAccountJson: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: 'net.thunderbird.thunderbolt'
+          aabPath: ${{ steps.find_aab.outputs.aab_path }}
+          track: 'internal'
+
+      - name: Upload build artifacts (if build fails)
+        if: failure()
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: android-build-logs-${{ github.run_id }}
+          path: |
+            src-tauri/gen/android/app/build/
+            src-tauri/gen/android/*.log
+          retention-days: 7
+
+      - name: Clean up sensitive files
+        if: always()
+        run: |
+          rm -f ~/.android/upload-keystore.jks
+          rm -f ~/google-play-service-account.json

@@ -1,0 +1,12 @@
+{
+  "name": "svelte",
+  "projectType": "library",
+  "targets": {
+    "compile": {},
+    "check": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "{projectRoot}", "command": "svelte-check" }
+    }
+  },
+  "tags": ["library"]
+}

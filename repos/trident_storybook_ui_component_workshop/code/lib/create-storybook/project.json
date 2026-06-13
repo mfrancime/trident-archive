@@ -1,0 +1,9 @@
+{
+  "name": "create-storybook",
+  "projectType": "library",
+  "targets": {
+    "compile": {},
+    "check": {}
+  },
+  "tags": ["library"]
+}

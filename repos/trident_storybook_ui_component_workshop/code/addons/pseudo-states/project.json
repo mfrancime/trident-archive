@@ -1,0 +1,9 @@
+{
+  "name": "storybook-addon-pseudo-states",
+  "projectType": "library",
+  "targets": {
+    "compile": {},
+    "check": {}
+  },
+  "tags": ["library"]
+}

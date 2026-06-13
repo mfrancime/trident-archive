@@ -1,0 +1,17 @@
+.additional {
+  color: var(--grey-500);
+}
+
+.chartControls {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 20px 0;
+}
+
+.additionalText {
+  margin-top: 8px;
+
+  color: var(--grey-500);
+  font-size: var(--font-secondary-size-md);
+}

@@ -1,0 +1,81 @@
+.assetsTotalInfo {
+  --cardsCount: 5;
+
+  grid-template-columns: 1.65fr 1fr 1fr 1.65fr 1.65fr;
+}
+
+.title {
+  color: var(--grey-500);
+  font-size: var(--font-base-size-md);
+  white-space: nowrap;
+}
+
+.totalContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  .total {
+    color: var(--green);
+    font-size: var(--font-secondary-size-md);
+    text-align: right;
+  }
+}
+
+.value {
+  margin-top: 8px;
+
+  font-size: var(--font-base-size-md);
+  font-feature-settings: 'tnum' on, 'lnum' on;
+}
+
+.additionalValue {
+  margin-top: 6px;
+
+  color: var(--grey-500);
+  font-size: var(--font-secondary-size-md);
+  font-feature-settings: 'tnum' on, 'lnum' on;
+}
+
+.chart {
+  height: 40px !important;
+  margin-left: 24px;
+}
+
+.zoneInfoContainer {
+  display: flex;
+  margin-right: 8px;
+
+  .logo {
+    margin-right: 12px;
+  }
+}
+
+.card {
+  &.doubleItem {
+    .value {
+      font-size: var(--font-heading-size-sm);
+    }
+  }
+
+  &.topItem {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  &.withChart {
+    display: flex;
+  }
+}
+
+@media (max-width: 1280px) {
+  .card {
+    min-width: 300px;
+  }
+}
+
+@media (max-width: 630px) {
+  .card {
+    margin: 16px;
+  }
+}

@@ -1,0 +1,45 @@
+.container {
+  width: 100%;
+
+  .periodContainer {
+    position: absolute;
+    right: 16px;
+    top: 0;
+  }
+
+  .table {
+    th {
+      &:first-child {
+        width: 100%;
+        min-width: 460px;
+
+        text-align: left;
+      }
+    }
+
+    tr td {
+      &:first-child {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-width: 460px;
+        padding-left: 0;
+      }
+    }
+  }
+}
+
+@media (max-width: 630px) {
+  .container {
+    .table {
+      th,
+      tr td {
+        &:first-child {
+          min-width: 188px;
+          max-width: 188px;
+          overflow: hidden;
+        }
+      }
+    }
+  }
+}

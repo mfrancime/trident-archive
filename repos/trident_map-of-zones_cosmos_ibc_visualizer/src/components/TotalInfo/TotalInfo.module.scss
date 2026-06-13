@@ -1,0 +1,49 @@
+.container {
+  --cardsCount: 5;
+
+  display: grid;
+  grid-template-columns: repeat(var(--cardsCount), 1fr);
+  gap: 16px;
+  padding: 12px 24px;
+  overflow-x: scroll;
+}
+
+@media (max-width: 1280px) {
+  .container {
+    grid-auto-columns: 1fr;
+  }
+}
+
+@media (max-width: 630px) {
+  .container {
+    display: initial;
+    padding-bottom: 10px;
+
+    :global(.carousel) {
+      padding-bottom: 5px;
+
+      :global(.slide) {
+        text-align: initial;
+      }
+
+      /* stylelint-disable */
+      :global(.control-dots) {
+        bottom: -10px;
+
+        :global(.dot) {
+          width: 4px;
+          height: 4px;
+          background-color: #33333d;
+          opacity: 1;
+          margin: 0 4px;
+        }
+
+        :global(.dot.selected) {
+          width: 6px;
+          height: 6px;
+          background-color: #bfbfc3;
+        }
+      }
+    }
+  }
+}

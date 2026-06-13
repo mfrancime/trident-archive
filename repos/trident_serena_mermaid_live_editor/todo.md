@@ -1,0 +1,4 @@
+- Setup CI and coveralls
+- Improve test coverage
+- `mermaid.init` should throw exception, no need to call `mermaid.parse`
+- Turn it into a dynamic website. Save user's data.

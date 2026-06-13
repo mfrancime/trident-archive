@@ -1,0 +1,122 @@
+{
+  "name": "map-of-zones-web",
+  "version": "0.1.0",
+  "private": true,
+  "lint-staged": {
+    "src/**/*.{js,ts,tsx}": [
+      "eslint . --fix"
+    ],
+    "src/**/*.scss": [
+      "stylelint --fix"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "dependencies": {
+    "@0xsquid/widget": "^1.5.5",
+    "@amplitude/analytics-browser": "^1.8.0",
+    "@apollo/client": "^3.6.9",
+    "@tanstack/react-query": "^4.20.9",
+    "@types/react": "^18.0.14",
+    "@types/react-dom": "^18.0.5",
+    "axios": "^1.2.2",
+    "classnames": "^2.3.1",
+    "framer-motion": "^6.5.1",
+    "graphql": "^16.5.0",
+    "moment": "^2.29.4",
+    "query-string": "^7.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-force-graph-3d": "^1.21.14",
+    "react-modal": "^3.16.1",
+    "react-responsive-carousel": "^3.2.23",
+    "react-router-dom": "^6.3.0",
+    "react-scripts": "^5.0.1",
+    "recharts": "^2.1.12",
+    "source-map-explorer": "^2.5.3",
+    "three": "^0.146.0",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired --max-old-space-size=4096 build",
+    "eject": "react-app-rewired eject",
+    "dev": "concurrently \"yarn start\" \"yarn generate:watch\"",
+    "lint:scss": "npx stylelint 'src/**/*.scss'",
+    "lint:scss:fix": "stylelint 'src/**/*.scss' --fix",
+    "lint:js": "eslint --ext .js,.jsx,.ts,.tsx,.graphql,.json src",
+    "lint:js:fix": "yarn run lint:js --fix",
+    "generate": "graphql-codegen",
+    "generate:watch": "graphql-codegen --watch",
+    "prepare": "husky install"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "printWidth": 100
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@graphql-codegen/add": "^3.1.1",
+    "@graphql-codegen/cli": "^2.6.2",
+    "@graphql-codegen/near-operation-file-preset": "^2.2.14",
+    "@graphql-codegen/schema-ast": "^4.0.0",
+    "@graphql-codegen/typed-document-node": "^2.2.13",
+    "@graphql-codegen/typescript": "^2.5.1",
+    "@graphql-codegen/typescript-operations": "^2.4.2",
+    "@graphql-eslint/eslint-plugin": "^3.10.6",
+    "@types/lodash": "^4.14.184",
+    "@types/node": "^18.15.10",
+    "@types/react-modal": "^3.13.1",
+    "@types/three": "^0.144.0",
+    "@typescript-eslint/eslint-plugin": "^5.28.0",
+    "@typescript-eslint/parser": "^5.28.0",
+    "concurrently": "^7.3.0",
+    "crypto-browserify": "^3.12.0",
+    "eslint": "^8.17.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-import-resolver-typescript": "^2.7.1",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-react": "^7.30.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-sort-exports": "^0.7.0",
+    "husky": "^8.0.1",
+    "lint-staged": "^13.0.3",
+    "path-browserify": "^1.0.1",
+    "prettier": "^2.7.0",
+    "process": "^0.11.10",
+    "react-app-rewired": "^2.2.1",
+    "react-force-graph-2d": "^1.23.10",
+    "sass": "^1.52.3",
+    "stream-browserify": "^3.0.0",
+    "stylelint": "^14.9.1",
+    "stylelint-config-prettier": "^9.0.3",
+    "stylelint-config-rational-order": "^0.1.2",
+    "stylelint-config-sass-guidelines": "^9.0.1",
+    "stylelint-config-standard": "^26.0.0",
+    "stylelint-order": "^5.0.0",
+    "stylelint-prettier": "^2.0.0",
+    "typescript": "^5.0.2"
+  }
+}

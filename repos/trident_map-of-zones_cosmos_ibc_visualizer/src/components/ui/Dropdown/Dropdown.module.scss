@@ -1,0 +1,70 @@
+.dropDownContainer {
+  position: relative;
+
+  color: var(--grey-500);
+
+  background-color: var(--black-600);
+  border-radius: 5px;
+  cursor: pointer;
+
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently
+                      supported by Chrome, Edge, Opera and Firefox */
+  -webkit-touch-callout: none; /* iOS Safari */
+
+  &.lg {
+    font-size: var(--font-base-size-md);
+  }
+
+  &.md {
+    font-size: var(--font-secondary-size-lg);
+  }
+
+  &.sm {
+    font-size: var(--font-secondary-size-md);
+  }
+
+  .dropDownHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px 5px;
+
+    border-radius: 5px;
+
+    &:hover,
+    &.active {
+      color: var(--grey-800);
+
+      background-color: var(--black-900);
+    }
+
+    .itemTitle {
+      width: 100%;
+    }
+
+    .arrowIcon {
+      width: 12px;
+      height: 8px;
+      margin-left: 4px;
+      pointer-events: none;
+    }
+  }
+
+  .dropDownList {
+    position: absolute;
+    z-index: 1000;
+
+    width: 100%;
+    margin: 0;
+    margin-top: 10px;
+    padding: 0;
+
+    color: var(--grey-500);
+
+    border-radius: 5px;
+  }
+}

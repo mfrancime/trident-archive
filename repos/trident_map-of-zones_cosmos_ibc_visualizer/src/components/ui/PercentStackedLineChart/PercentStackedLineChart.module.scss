@@ -1,0 +1,26 @@
+hr {
+  height: 1px;
+
+  border-top: none;
+  border-bottom: 1px solid;
+}
+
+.notActiveLine {
+  width: 100%;
+  margin: 0 2px;
+
+  border-color: var(--black-900);
+}
+
+.leftLine {
+  margin-right: 2px;
+  margin-left: 2px;
+
+  border-color: var(--pink);
+}
+
+.rightLine {
+  margin-right: 2px;
+
+  border-color: var(--pink);
+}

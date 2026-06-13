@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <!-- These values will get merged with the values created by Tauri CLI:
+        https://tauri.app/distribute/macos-application-bundle/#native-configuration -->
+        <!-- @todo - this should be disabled for release! -->
+        <key>UIFileSharingEnabled</key>
+        <true />
+        <key>LSSupportsOpeningDocumentsInPlace</key>
+        <true />
+        <key>ITSAppUsesNonExemptEncryption</key>
+        <false />
+    </dict>
+</plist>

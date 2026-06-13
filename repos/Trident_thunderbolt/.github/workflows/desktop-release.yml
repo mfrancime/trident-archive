@@ -1,0 +1,443 @@
+name: Desktop Release
+run-name: Desktop release for v${{ inputs.version }}
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.2.3 without v prefix)'
+        required: true
+        type: string
+      nightly:
+        description: 'Is this a nightly build?'
+        required: false
+        default: false
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.2.3 without v prefix)'
+        required: true
+        type: string
+      nightly:
+        description: 'Is this a nightly build?'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: desktop-release-${{ inputs.version }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  draft:
+    name: Create Draft Release
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.set-version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: v${{ inputs.version }}
+
+      - name: Set version
+        id: set-version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          echo "version=v$INPUT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release (Stable)
+        if: ${{ !inputs.nightly }}
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        with:
+          tag_name: v${{ inputs.version }}
+          name: Release v${{ inputs.version }}
+          draft: true
+          prerelease: true
+          body: |
+            ## Release Candidate v${{ inputs.version }}
+
+            This is a release candidate. The final release will be created after successful builds.
+
+            ### Downloads
+
+            Binaries will be attached to this release after successful builds.
+
+      - name: Create GitHub Release (Nightly)
+        if: ${{ inputs.nightly }}
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        with:
+          tag_name: v${{ inputs.version }}
+          name: Nightly Build v${{ inputs.version }}
+          draft: true
+          prerelease: true
+          body: |
+            ## Nightly Build v${{ inputs.version }}
+
+            **Warning:** This is an automated nightly build and may be unstable. Use at your own risk.
+
+            ### Downloads
+
+            Binaries will be attached to this release after successful builds.
+
+      # Skip CrabNebula for nightly builds to prevent auto-updater from pushing unstable builds
+      - name: Create CrabNebula Draft Release
+        if: ${{ !inputs.nightly }}
+        uses: crabnebula-dev/cloud-release@1a8803698ba41de6b23e42abc5dcc3721308233c # v0.2.6
+        with:
+          command: release draft thunderbird/thunderbolt ${{ inputs.version }}
+          api-key: ${{ secrets.CRABNEBULA_CLOUD_API_KEY }}
+
+  build:
+    name: Build ${{ matrix.build_name }}
+    needs: draft
+    environment: thunderbolt_release
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+            build_name: 'Linux'
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            build_name: 'macOS (Apple Silicon)'
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            build_name: 'macOS (Intel)'
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            build_name: 'Windows (x64)'
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            build_name: 'Windows (ARM64)'
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: v${{ inputs.version }}
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 'lts/*'
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@2b1f5e9b395427c92ee4e3331786ca3c37afe2d7 # v1
+        with:
+          toolchain: stable
+          cache: false
+          rustflags: ''
+
+      - name: Cache cargo dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-release-${{ inputs.version }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-release-${{ inputs.version }}-
+            ${{ runner.os }}-cargo-release-
+
+      - name: Setup macOS code signing and notarization
+        if: matrix.os == 'macos-latest'
+        env:
+          APPLE_DEVELOPER_CERTIFICATE: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE }}
+          APPLE_DEVELOPER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # Validate required secrets
+          if [ -z "$APPLE_DEVELOPER_CERTIFICATE" ] || [ -z "$APPLE_DEVELOPER_CERTIFICATE_PASSWORD" ]; then
+            echo "Required secrets are not set"
+            exit 1
+          fi
+
+          # Decode certificate (matching iOS workflow exactly)
+          CLEAN_CERT=$(echo "$APPLE_DEVELOPER_CERTIFICATE" | tr -d '\n\r\t ' | tr -d '[:space:]')
+          echo "$CLEAN_CERT" | base64 --decode > certificate.p12
+
+          if [ ! -s certificate.p12 ]; then
+            echo "Failed to decode certificate"
+            exit 1
+          fi
+
+          # Create and configure keychain
+          security create-keychain -p "build" build.keychain
+          security set-keychain-settings -lut 21600 build.keychain
+          security unlock-keychain -p "build" build.keychain
+          security list-keychains -d user -s build.keychain login.keychain
+
+          # Convert certificate to macOS-compatible format (using older encryption algorithms)
+          openssl pkcs12 -in certificate.p12 -out temp_cert.pem -clcerts -nokeys -passin pass:"$APPLE_DEVELOPER_CERTIFICATE_PASSWORD"
+          openssl pkcs12 -in certificate.p12 -out temp_key.pem -nocerts -nodes -passin pass:"$APPLE_DEVELOPER_CERTIFICATE_PASSWORD"
+          openssl pkcs12 -export -out macos_certificate.p12 -inkey temp_key.pem -in temp_cert.pem -passout pass:"$APPLE_DEVELOPER_CERTIFICATE_PASSWORD" -keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1
+
+          # Import the converted certificate
+          security import macos_certificate.p12 -k build.keychain -P "$APPLE_DEVELOPER_CERTIFICATE_PASSWORD" -T /usr/bin/codesign -T /usr/bin/productsign
+
+          # Clean up temporary files
+          rm temp_cert.pem temp_key.pem macos_certificate.p12
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "build" build.keychain
+
+          # Clean up certificate
+          rm certificate.p12
+
+          # Auto-detect signing identity from imported certificate
+          DETECTED_IDENTITY=$(security find-identity -v -p codesigning build.keychain | grep -o '"[^"]*"' | head -1 | tr -d '"')
+
+          if [ -z "$DETECTED_IDENTITY" ]; then
+            echo "No valid signing identity found in keychain"
+            exit 1
+          fi
+
+          # Setup App Store Connect API key
+          mkdir -p ~/private_keys
+          if echo "$APP_STORE_CONNECT_API_KEY" | base64 --decode > ~/private_keys/AuthKey_$APP_STORE_CONNECT_API_KEY_ID.p8 2>/dev/null; then
+            echo "Decoded base64 API key"
+          else
+            echo "$APP_STORE_CONNECT_API_KEY" > ~/private_keys/AuthKey_$APP_STORE_CONNECT_API_KEY_ID.p8
+          fi
+          chmod 600 ~/private_keys/AuthKey_$APP_STORE_CONNECT_API_KEY_ID.p8
+
+          # Export notarization env vars for subsequent steps (use detected identity)
+          echo "APPLE_SIGNING_IDENTITY=$DETECTED_IDENTITY" >> $GITHUB_ENV
+          echo "APPLE_API_ISSUER=$APP_STORE_CONNECT_ISSUER_ID" >> $GITHUB_ENV
+          echo "APPLE_API_KEY=$APP_STORE_CONNECT_API_KEY_ID" >> $GITHUB_ENV
+          echo "APPLE_API_KEY_PATH=$HOME/private_keys/AuthKey_$APP_STORE_CONNECT_API_KEY_ID.p8" >> $GITHUB_ENV
+          echo "APPLE_TEAM_ID=$APPLE_TEAM_ID" >> $GITHUB_ENV
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            webkit2gtk-4.1 \
+            libappindicator3-dev \
+            librsvg2-dev \
+            squashfs-tools
+          # Install libfuse2 for running linuxdeploy (which is itself an AppImage)
+          # Ubuntu 24.04 uses libfuse2t64 as a transition package
+          sudo add-apt-repository universe -y
+          sudo apt-get update
+          sudo apt-get install -y libfuse2t64 || sudo apt-get install -y libfuse2 || true
+
+      - name: build Tauri app for Linux
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          bun install --frozen-lockfile
+          bun tauri build
+        env:
+          RUSTFLAGS: ''
+          CARGO_INCREMENTAL: 0
+          RUSTC_WRAPPER: ''
+          NO_STRIP: true
+          VITE_THUNDERBOLT_CLOUD_URL: ${{ vars.VITE_THUNDERBOLT_CLOUD_URL }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: build Tauri app for Windows (x86_64)
+        if: matrix.os == 'windows-latest' && matrix.target == 'x86_64-pc-windows-msvc'
+        run: |
+          bun install --frozen-lockfile
+          bun tauri build --target x86_64-pc-windows-msvc
+        env:
+          RUSTFLAGS: ''
+          CARGO_INCREMENTAL: 0
+          RUSTC_WRAPPER: ''
+          VITE_THUNDERBOLT_CLOUD_URL: ${{ vars.VITE_THUNDERBOLT_CLOUD_URL }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: build Tauri app for Windows (ARM64)
+        if: matrix.os == 'windows-latest' && matrix.target == 'aarch64-pc-windows-msvc'
+        run: |
+          # Install ARM64 target
+          rustup target add aarch64-pc-windows-msvc
+          # Build for ARM64
+          bun install --frozen-lockfile
+          bun tauri build --target aarch64-pc-windows-msvc
+        env:
+          RUSTFLAGS: ''
+          CARGO_INCREMENTAL: 0
+          RUSTC_WRAPPER: ''
+          VITE_THUNDERBOLT_CLOUD_URL: ${{ vars.VITE_THUNDERBOLT_CLOUD_URL }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Build Tauri app for macOS (Silicon)
+        if: matrix.os == 'macos-latest' && matrix.target == 'aarch64-apple-darwin'
+        run: |
+          bun install --frozen-lockfile
+          bun tauri build --target aarch64-apple-darwin
+        env:
+          RUSTFLAGS: ''
+          CARGO_INCREMENTAL: 0
+          RUSTC_WRAPPER: ''
+          VITE_THUNDERBOLT_CLOUD_URL: ${{ vars.VITE_THUNDERBOLT_CLOUD_URL }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Build Tauri app for macOS (Intel)
+        if: matrix.os == 'macos-latest' && matrix.target == 'x86_64-apple-darwin'
+        run: |
+          # Install x86_64 target with retry logic
+          rustup target add x86_64-apple-darwin || rustup target add x86_64-apple-darwin
+          # Verify target is installed
+          rustup target list --installed | grep x86_64-apple-darwin
+          # Clean only the x86_64 target to avoid architecture conflicts
+          rm -rf src-tauri/target/x86_64-apple-darwin
+          # Build for Intel with proper environment
+          bun install --frozen-lockfile
+          bun tauri build --target x86_64-apple-darwin
+        env:
+          # Override the target-cpu=native flag
+          RUSTFLAGS: '-C target-cpu=x86-64'
+          CARGO_INCREMENTAL: 0
+          RUSTC_WRAPPER: ''
+          # Set C compiler for cross-compilation
+          CC_x86_64_apple_darwin: 'clang -target x86_64-apple-darwin'
+          CXX_x86_64_apple_darwin: 'clang++ -target x86_64-apple-darwin'
+          AR_x86_64_apple_darwin: 'ar'
+          CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER: 'clang'
+          VITE_THUNDERBOLT_CLOUD_URL: ${{ vars.VITE_THUNDERBOLT_CLOUD_URL }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Upload Linux artifacts to GitHub Release
+        if: matrix.os == 'ubuntu-24.04'
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        with:
+          tag_name: v${{ inputs.version }}
+          draft: true
+          files: |
+            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/appimage/*.AppImage
+            src-tauri/target/release/bundle/appimage/*.AppImage.tar.gz
+            src-tauri/target/release/bundle/appimage/*.AppImage.tar.gz.sig
+            src-tauri/target/release/bundle/rpm/*.rpm
+
+      - name: Upload Windows artifacts to GitHub Release
+        if: matrix.os == 'windows-latest'
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        with:
+          tag_name: v${{ inputs.version }}
+          draft: true
+          files: |
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi.zip
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi.zip.sig
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.nsis.zip
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.nsis.zip.sig
+            src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi
+            src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi.zip
+            src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi.zip.sig
+            src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/*.exe
+            src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/*.nsis.zip
+            src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/*.nsis.zip.sig
+
+      - name: Upload macOS artifacts to GitHub Release
+        if: matrix.os == 'macos-latest'
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        with:
+          tag_name: v${{ inputs.version }}
+          draft: true
+          files: |
+            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app.tar.gz
+            src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app.tar.gz.sig
+            src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/x86_64-apple-darwin/release/bundle/macos/*.app.tar.gz
+            src-tauri/target/x86_64-apple-darwin/release/bundle/macos/*.app.tar.gz.sig
+
+      # Skip CrabNebula for nightly builds
+      - name: Upload to CrabNebula Cloud
+        if: ${{ !inputs.nightly }}
+        uses: crabnebula-dev/cloud-release@1a8803698ba41de6b23e42abc5dcc3721308233c # v0.2.6
+        with:
+          command: release upload thunderbird/thunderbolt ${{ inputs.version }} --framework tauri
+          api-key: ${{ secrets.CRABNEBULA_CLOUD_API_KEY }}
+
+  publish:
+    name: Publish Release
+    needs: [draft, build]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: v${{ inputs.version }}
+          fetch-depth: 0
+
+      - name: Publish GitHub Release (Stable)
+        if: ${{ !inputs.nightly }}
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        with:
+          tag_name: v${{ inputs.version }}
+          draft: false
+          prerelease: false
+          name: Release v${{ inputs.version }}
+          body: |
+            ## Release v${{ inputs.version }}
+
+            ### Downloads
+
+            Download the appropriate installer for your platform below.
+
+            - **Windows**: `.msi` or `.exe` installer
+            - **macOS**: `.dmg` installer (Intel and Apple Silicon)
+            - **Linux**: `.AppImage`, `.deb`, or `.rpm` package
+
+            ### Release Notes
+
+            _Add your release notes here_
+
+            ---
+
+            **Note:** iOS builds are deployed separately via the iOS Release workflow.
+
+      - name: Publish GitHub Release (Nightly)
+        if: ${{ inputs.nightly }}
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        with:
+          tag_name: v${{ inputs.version }}
+          draft: false
+          prerelease: true
+          name: Nightly Build v${{ inputs.version }}
+          body: |
+            ## Nightly Build v${{ inputs.version }}
+
+            **Warning:** This is an automated nightly build and may be unstable. Use at your own risk.
+
+            ### Downloads
+
+            Download the appropriate installer for your platform below.
+
+            - **Windows**: `.msi` or `.exe` installer
+            - **macOS**: `.dmg` installer (Intel and Apple Silicon)
+            - **Linux**: `.AppImage`, `.deb`, or `.rpm` package
+
+            ---
+
+            For stable releases, please visit the [latest release](../../releases/latest).
+
+      # Publish release on CrabNebula Cloud for auto-updates (skip for nightly to prevent unstable auto-updates)
+      - name: Publish to CrabNebula Cloud
+        if: ${{ !inputs.nightly }}
+        uses: crabnebula-dev/cloud-release@1a8803698ba41de6b23e42abc5dcc3721308233c # v0.2.6
+        with:
+          command: release publish thunderbird/thunderbolt ${{ inputs.version }} --framework tauri
+          api-key: ${{ secrets.CRABNEBULA_CLOUD_API_KEY }}

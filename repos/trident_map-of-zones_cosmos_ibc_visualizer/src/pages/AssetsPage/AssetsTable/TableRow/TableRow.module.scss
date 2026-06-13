@@ -1,0 +1,86 @@
+.container {
+  cursor: pointer;
+
+  td {
+    vertical-align: middle;
+
+    &:first-child {
+      text-align: center;
+    }
+
+    &:last-child {
+      padding-top: 10px;
+      padding-bottom: 10px;
+      padding-left: 6px;
+    }
+
+    .code {
+      color: var(--grey-500);
+      font-size: var(--font-secondary-size-md);
+    }
+
+    .chartContainer {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 201px;
+      height: 40px;
+
+      .code {
+        margin-right: 6px;
+
+        font-size: var(--font-base-size-md);
+      }
+    }
+
+    .position {
+      display: block;
+
+      color: var(--grey-500);
+      font-size: var(--font-base-size-md);
+      font-feature-settings: 'tnum' on, 'lnum' on;
+    }
+
+    .value {
+      justify-content: flex-end;
+
+      font-size: var(--font-base-size-md);
+      font-feature-settings: 'tnum' on, 'lnum' on;
+    }
+  }
+
+  .assetInfoContainer {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+
+    .logo {
+      margin-right: 12px;
+    }
+
+    .nameAndStatusContainer {
+      overflow: hidden;
+
+      .nameContainer {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2px;
+
+        .name {
+          overflow: hidden;
+
+          font-size: var(--font-base-size-md);
+          text-overflow: ellipsis;
+        }
+      }
+    }
+  }
+
+  .ratingDiff {
+    margin-left: 4px;
+  }
+
+  &:hover > td {
+    background-color: var(--black-500);
+  }
+}

@@ -1,0 +1,54 @@
+.container {
+  display: flex;
+  flex-direction: column;
+
+  .title {
+    display: inline-block;
+    margin-bottom: 8px;
+
+    color: var(--grey-500);
+    font-size: var(--font-base-size-md);
+
+    .icon {
+      margin-right: 4px;
+    }
+
+    .periodText {
+      margin-left: 4px;
+    }
+  }
+
+  &.md {
+    font-size: var(--font-base-size-md);
+  }
+
+  &.lg {
+    font-size: var(--font-heading-size-sm);
+  }
+
+  &.secondary {
+    .valueContainer {
+      color: var(--grey-400);
+    }
+  }
+
+  .valueContainer {
+    display: flex;
+    flex-direction: column;
+
+    &.rightAlign {
+      align-items: flex-end;
+    }
+
+    .pendingContainer {
+      margin-top: 6px;
+    }
+
+    .additionalInfo {
+      margin-top: 6px;
+
+      color: var(--grey-500);
+      font-size: var(--font-secondary-size-md);
+    }
+  }
+}

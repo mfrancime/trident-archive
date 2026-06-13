@@ -1,0 +1,24 @@
+.tab-list {
+  display: flex;
+  margin-top: 2rem;
+}
+.tab-list a {
+  padding: 0.5rem;
+  background: #140f1e;
+  padding-right: 0.5rem;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.tab-list a:first-of-type {
+  border-top-left-radius: 4px;
+}
+.tab-list a:last-of-type {
+  border-top-right-radius: 4px;
+  border-right: none;
+}
+.tab-list a.active {
+  background: #382b54;
+}
+.tab-list a:hover {
+  background: rgba(170, 43, 138, 0.7333333333);
+}/*# sourceMappingURL=tabs.css.map */

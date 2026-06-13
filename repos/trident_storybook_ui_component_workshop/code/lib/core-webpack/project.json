@@ -1,0 +1,9 @@
+{
+  "name": "core-webpack",
+  "projectType": "library",
+  "targets": {
+    "compile": {},
+    "check": {}
+  },
+  "tags": ["library"]
+}

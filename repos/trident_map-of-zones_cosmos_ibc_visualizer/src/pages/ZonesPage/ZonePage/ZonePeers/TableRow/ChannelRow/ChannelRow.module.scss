@@ -1,0 +1,130 @@
+.container {
+  height: 50px;
+
+  td {
+    padding-top: 7.5px;
+    padding-bottom: 7.5px;
+    padding-left: 28px;
+
+    &:first-child {
+      vertical-align: middle;
+    }
+
+    &:last-child {
+      padding-right: 24px;
+    }
+
+    .arrowContainer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+    }
+
+    .position {
+      color: var(--grey-500);
+      font-size: var(--font-map-size-md);
+      font-feature-settings: 'tnum' on, 'lnum' on;
+    }
+
+    .channelsContainer {
+      position: relative;
+
+      display: flex;
+      align-items: center;
+
+      .channel {
+        width: 80px;
+        overflow: hidden;
+
+        font-size: var(--font-secondary-size-md);
+        text-overflow: ellipsis;
+        font-feature-settings: 'tnum' on, 'lnum' on;
+      }
+
+      .statusContainer {
+        position: relative;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 129px;
+        height: 1px;
+        margin: 0 12px;
+
+        background-color: var(--green);
+        border-color: var(--green);
+
+        &.statusClosedContainer {
+          background-color: var(--orange);
+          border-color: var(--orange);
+        }
+      }
+
+      .infoIcon {
+        margin-left: 12px;
+      }
+    }
+
+    .value {
+      font-feature-settings: 'tnum' on, 'lnum' on;
+
+      font-size: var(--font-secondary-size-md);
+    }
+  }
+
+  &:hover > td {
+    background-color: #16161c;
+  }
+}
+
+@media (max-width: 630px) {
+  .container {
+    td {
+      &:last-child {
+        padding-right: 12px;
+      }
+
+      .arrowContainer {
+        width: 34px;
+      }
+
+      .channelsContainer {
+        display: grid;
+        gap: 4px;
+
+        .statusContainer {
+          position: absolute;
+          left: 0;
+
+          width: 5px;
+          height: 60%;
+          margin: 0;
+
+          background: transparent;
+          border-style: solid;
+          border-width: 1px;
+          border-right-color: transparent;
+
+          &.statusClosedContainer {
+            background: transparent;
+            border-right-color: transparent;
+
+            svg {
+              display: none;
+            }
+          }
+        }
+
+        .channel {
+          position: relative;
+          left: 8px;
+        }
+
+        .infoIcon {
+          display: none;
+        }
+      }
+    }
+  }
+}

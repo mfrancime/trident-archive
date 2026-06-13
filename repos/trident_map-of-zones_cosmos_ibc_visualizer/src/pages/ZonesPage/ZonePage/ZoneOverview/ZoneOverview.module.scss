@@ -1,0 +1,105 @@
+.container {
+  --gap: 28px;
+
+  display: grid;
+  grid-template-areas:
+    'overview overview'
+    'token volumes'
+    'parameters parameters'
+    'transactions ibcTransfers'
+    'activeUsers returnedAddresses'
+    'delegates .';
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  padding: 0 24px 24px;
+  overflow: hidden;
+
+  .overview {
+    grid-area: overview;
+
+    display: grid;
+    gap: var(--gap);
+    grid-auto-flow: column;
+    grid-template-columns: 1fr max(230px);
+  }
+
+  .tokenBlock {
+    grid-area: token;
+    min-height: 447px;
+  }
+
+  .volumesBlock {
+    grid-area: volumes;
+  }
+
+  .parametersBlock {
+    grid-area: parameters;
+  }
+
+  .transactionsBlock {
+    grid-area: transactions;
+  }
+
+  .ibcTransfersBlock {
+    grid-area: ibcTransfers;
+  }
+
+  .activeUsersBlock {
+    grid-area: activeUsers;
+  }
+
+  .returnedAddressesBlock {
+    grid-area: returnedAddresses;
+  }
+
+  .delegatesBlock {
+    grid-area: delegates;
+  }
+
+  .delegationsBlock {
+    grid-area: delegations;
+  }
+}
+
+@media (min-width: 980px) and (max-width: 1280px) {
+  .container {
+    .overview {
+      grid-template-columns: 1fr calc((100% - var(--gap) * 2) / 3);
+    }
+  }
+}
+
+@media (max-width: 980px) {
+  .container {
+    display: grid;
+    grid-template-areas:
+      'overview'
+      'token'
+      'volumes'
+      'parameters'
+      'transactions'
+      'ibcTransfers'
+      'activeUsers'
+      'returnedAddresses'
+      'delegates'
+      'delegations';
+    grid-template-columns: 1fr;
+    gap: 25px;
+
+    .overview {
+      grid-auto-flow: row;
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 630px) {
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+
+    .tokenBlock {
+      min-height: 600px;
+    }
+  }
+}

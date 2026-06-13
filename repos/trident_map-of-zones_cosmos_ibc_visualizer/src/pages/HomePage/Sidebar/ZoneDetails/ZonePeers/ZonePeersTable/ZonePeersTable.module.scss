@@ -1,0 +1,39 @@
+.emptyContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.peerCard {
+  display: block;
+  min-height: 160px;
+  margin-bottom: 16px;
+
+  .title {
+    margin-bottom: 4px;
+
+    color: var(--grey-500);
+    font-size: var(--font-secondary-size-md);
+
+    .icon {
+      margin: 0 6px;
+    }
+  }
+
+  .lineChart {
+    margin: 8px 0;
+  }
+
+  .totalValue {
+    margin-bottom: 8px;
+
+    font-size: var(--font-heading-size-sm);
+  }
+
+  .valuesContainer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+}

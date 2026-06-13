@@ -1,0 +1,53 @@
+.container {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .detailsTitle {
+    display: flex;
+    align-items: center;
+
+    .zoneLogo {
+      margin-right: 16px;
+    }
+
+    .zoneBaseInfo {
+      display: flex;
+      flex-direction: column;
+
+      .zoneName {
+        font-size: var(--font-heading-size-sm);
+        font-weight: 600; // TODO: use variable semi-bold
+      }
+
+      .zoneWebsite {
+        margin-top: 5px;
+
+        color: var(--grey-500);
+        font-size: var(--font-base-size-md);
+      }
+    }
+  }
+
+  .closeIcon {
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    cursor: pointer;
+
+    fill: var(--black-900);
+    stroke: var(--white);
+
+    :hover {
+      fill: var(--grey-100);
+    }
+  }
+
+  .pagesSwitcher {
+    margin-top: 20px;
+    margin-bottom: 24px;
+  }
+}

@@ -1,0 +1,7 @@
+app_identifier("net.thunderbird.thunderbolt")
+
+team_id(ENV["APPLE_TEAM_ID"]) # Developer Portal Team ID
+
+# For local development, uncomment and set these manually:
+# apple_id("your-apple-id@example.com") # Your Apple ID email address
+# team_id("YOUR_TEAM_ID") # Your actual Team ID

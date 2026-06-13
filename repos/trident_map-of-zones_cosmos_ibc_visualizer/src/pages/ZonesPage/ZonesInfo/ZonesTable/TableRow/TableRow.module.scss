@@ -1,0 +1,80 @@
+.container {
+  display: table-row;
+
+  cursor: pointer;
+
+  td {
+    &:first-child {
+      vertical-align: middle;
+    }
+
+    &:nth-child(2) {
+      vertical-align: middle;
+    }
+
+    &:last-child {
+      height: 40px;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      padding-left: 0;
+    }
+
+    .position {
+      display: block;
+
+      color: var(--grey-500);
+      font-size: var(--font-base-size-md);
+      font-feature-settings: 'tnum' on, 'lnum' on;
+    }
+
+    .zoneName {
+      overflow: hidden;
+
+      font-size: var(--font-base-size-md);
+    }
+
+    .value {
+      font-feature-settings: 'tnum' on, 'lnum' on;
+    }
+
+    .status {
+      margin-left: 4px;
+    }
+  }
+
+  .disclaimer {
+    margin-left: 8px;
+  }
+
+  .zoneBaseInfoContainer {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+
+    .logo {
+      margin-right: 12px;
+    }
+  }
+
+  .ratingDiff {
+    margin-left: 4px;
+  }
+
+  &:hover > td {
+    background-color: var(--black-500);
+  }
+}
+
+@media (max-width: 630px) {
+  .container {
+    td {
+      &:nth-child(2) {
+        max-width: 156px;
+      }
+
+      .status {
+        display: none;
+      }
+    }
+  }
+}

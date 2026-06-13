@@ -1,0 +1,9 @@
+{
+  "name": "preact",
+  "projectType": "library",
+  "targets": {
+    "compile": {},
+    "check": {}
+  },
+  "tags": ["library"]
+}

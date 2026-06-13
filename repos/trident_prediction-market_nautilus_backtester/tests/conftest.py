@@ -1,0 +1,6 @@
+from __future__ import annotations
+
+from prediction_market_extensions import install_commission_patch
+
+
+install_commission_patch()

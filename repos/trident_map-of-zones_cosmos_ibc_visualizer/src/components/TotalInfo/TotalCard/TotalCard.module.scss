@@ -1,0 +1,14 @@
+.container {
+  min-height: 92px;
+  padding: 16px;
+
+  white-space: nowrap;
+
+  background-color: var(--black-500);
+  border-radius: 4px;
+  box-shadow: 0 8px 15px rgb(0 0 0 / 30%);
+
+  .valueContainer {
+    display: flex;
+  }
+}

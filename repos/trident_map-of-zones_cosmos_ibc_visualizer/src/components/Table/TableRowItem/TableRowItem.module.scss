@@ -1,0 +1,49 @@
+td {
+  height: inherit;
+
+  padding-top: 12px;
+  padding-bottom: 12px;
+  padding-left: 28px;
+
+  white-space: nowrap;
+  vertical-align: top;
+
+  z-index: 10;
+
+  &:first-child {
+    padding-left: 24px;
+  }
+
+  &:last-child {
+    padding-right: 24px;
+  }
+
+  &.sticky {
+    position: sticky;
+    left: 0;
+
+    background-color: var(--black-100);
+
+    &:hover {
+      z-index: 4;
+    }
+  }
+
+  &.withBorder {
+    padding-right: 12px;
+
+    border-right: 1px solid var(--black-700);
+  }
+}
+
+@media (max-width: 630px) {
+  td {
+    &:first-child {
+      padding-left: 12px;
+    }
+
+    &:last-child {
+      padding-right: 12px;
+    }
+  }
+}

@@ -1,0 +1,141 @@
+th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+
+  padding-top: 6px;
+  padding-left: 28px;
+
+  color: var(--grey-500);
+  font-weight: 400;
+  font-size: var(--font-secondary-size-md);
+  white-space: nowrap;
+  text-align: right;
+
+  background-color: var(--black-100);
+
+  border-bottom: 1px solid var(--black-700);
+
+  .contentContainer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    .circle {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-right: 4px;
+      margin-bottom: 6px;
+
+      border-radius: 50%;
+
+      &.source {
+        background-color: var(--pink);
+      }
+
+      &.target {
+        background-color: var(--blue);
+      }
+    }
+
+    .titleContainer {
+      padding-bottom: 6px;
+    }
+  }
+
+  &:first-child {
+    padding-left: 24px;
+
+    // TODO: find another solution
+    &::before {
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+
+      width: 24px;
+      height: 1px;
+
+      background-color: var(--black-100);
+
+      content: '';
+    }
+  }
+
+  &:last-child {
+    padding-right: 24px;
+
+    // TODO: find another solution
+    &::after {
+      position: absolute;
+      right: 0;
+      bottom: -1px;
+
+      width: 24px;
+      height: 1px;
+
+      background-color: var(--black-100);
+
+      content: '';
+    }
+  }
+
+  &.alignCenter {
+    .contentContainer {
+      justify-content: center;
+    }
+  }
+
+  &.alignLeft {
+    .contentContainer {
+      justify-content: flex-start;
+    }
+  }
+
+  &.selected {
+    .titleContainer {
+      color: var(--white);
+
+      border-bottom: 1px solid var(--white);
+    }
+  }
+
+  &.selectable {
+    cursor: pointer;
+
+    &:hover {
+      color: var(--grey-800);
+    }
+  }
+
+  &.sticky {
+    left: 0;
+    z-index: 3;
+  }
+
+  &.withBorder {
+    padding-right: 12px;
+
+    border-right: 1px solid transparent;
+  }
+}
+
+@media (max-width: 630px) {
+  th {
+    &:first-child {
+      padding-left: 12px;
+
+      &::before {
+        width: 12px;
+      }
+    }
+
+    &:last-child {
+      padding-right: 12px;
+
+      &::after {
+        width: 12px;
+      }
+    }
+  }
+}

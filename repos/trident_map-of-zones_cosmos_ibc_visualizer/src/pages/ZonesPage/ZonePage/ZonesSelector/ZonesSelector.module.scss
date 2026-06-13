@@ -1,0 +1,56 @@
+.container {
+  position: absolute;
+  top: 48px;
+  z-index: 1000;
+
+  display: flex;
+  flex-direction: column;
+  width: 360px;
+  max-width: calc(100vw - 48px);
+  max-height: 570px;
+
+  background-color: var(--black-500);
+  border-radius: 5px;
+
+  box-shadow: 0 8px 15px rgb(0 0 0 / 30%);
+
+  .searchContainer {
+    margin: 16px;
+
+    input {
+      height: 32px;
+    }
+  }
+
+  .itemsContainer {
+    padding-bottom: 8px;
+  }
+
+  .zonesNotFoundContainer {
+    margin: 24px 0 32px;
+
+    color: var(--grey-300);
+    font-size: var(--font-base-size-lg);
+    text-align: center;
+  }
+
+  .zone {
+    cursor: pointer;
+
+    > div {
+      padding: 9px 16px;
+
+      &:hover {
+        background-color: var(--black-700);
+      }
+    }
+
+    &.activeZone {
+      pointer-events: none;
+
+      > div {
+        background-color: var(--black-700);
+      }
+    }
+  }
+}

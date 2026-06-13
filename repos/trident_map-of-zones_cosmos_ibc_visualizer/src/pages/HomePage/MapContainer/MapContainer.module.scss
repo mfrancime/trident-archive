@@ -1,0 +1,58 @@
+.container {
+  position: relative;
+
+  margin-top: -63px;
+  margin-bottom: -26px;
+
+  .leftButtonsContainer {
+    position: absolute;
+    top: 50%;
+
+    display: flex;
+    flex-direction: column;
+    margin-left: 16px;
+    z-index: 100;
+
+    button {
+      display: flex;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      padding: 6px;
+
+      .icon {
+        display: flex;
+        align-items: center;
+
+        stroke: var(--white);
+      }
+    }
+
+    .zoomInBtn {
+      margin-bottom: 1px;
+
+      border-radius: 5px 5px 0 0;
+    }
+
+    .zoomOutBtn {
+      border-radius: 0 0 5px 5px;
+    }
+
+    .zoomInBtn,
+    .zoomOutBtn {
+      .icon {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .switchMapType {
+      margin-top: 16px;
+
+      .icon {
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+}

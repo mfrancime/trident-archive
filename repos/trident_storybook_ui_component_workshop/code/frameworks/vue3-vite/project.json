@@ -1,0 +1,9 @@
+{
+  "name": "vue3-vite",
+  "projectType": "library",
+  "targets": {
+    "compile": {},
+    "check": {}
+  },
+  "tags": ["library"]
+}

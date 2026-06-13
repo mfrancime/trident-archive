@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "storybook/internal/*": ["../../lib/cli/core/*"]
+    }
+  },
+  "extends": "../../tsconfig.json",
+  "include": ["src/**/*"]
+}

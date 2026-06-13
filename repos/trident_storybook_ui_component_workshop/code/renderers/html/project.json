@@ -1,0 +1,9 @@
+{
+  "name": "html",
+  "projectType": "library",
+  "targets": {
+    "compile": {},
+    "check": {}
+  },
+  "tags": ["library"]
+}

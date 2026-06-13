@@ -1,0 +1,9 @@
+{
+  "name": "web-components",
+  "projectType": "library",
+  "targets": {
+    "compile": {},
+    "check": {}
+  },
+  "tags": ["library"]
+}

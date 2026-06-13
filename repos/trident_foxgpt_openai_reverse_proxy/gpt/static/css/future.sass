@@ -1,0 +1,109 @@
+@import '_vars'
+@import 'https://rsms.me/inter/inter.css'
+@import 'https://fonts.cdnfonts.com/css/roboto-mono'
+
+html
+    scroll-behavior: smooth
+
+    *
+        scroll-margin-top: 6rem
+        color: $fg
+        box-sizing: border-box
+        font-family: $font
+
+    background: $bg
+
+script
+    display: none
+    position: absolute
+    top: -9000px
+    left: -9000px
+    opacity: 0
+    visibility: hidden
+
+h1
+    margin-top: 0
+    font-size: 38px
+    font-weight: 800
+
+h2
+    font-size: 32px
+h3
+    font-size: 28px
+
+h2, h3, h4, h5, h6
+    font-weight: 800
+
+mark
+    color: $accent-light
+    background: none
+
+p, li
+    line-height: 1.5
+
+code, pre *
+    font-family: 'Roboto Mono', monospace
+
+code
+    word-wrap: normal
+    word-break: break-all
+    white-space: normal
+
+@keyframes gradient
+    0%
+        background-position: 0% 50%
+    50%
+        background-position: 100% 50%
+    100%
+        background-position: 0% 50%
+
+button
+    cursor: pointer
+    border: none
+    border-radius: 4px
+    padding: 0.5rem 1rem
+    font-size: 16px
+
+    background: $gradient
+    background-size: 400% 400%
+    animation: gradient 5s ease infinite
+
+body
+    max-width: 850px
+    margin-inline: auto
+
+footer
+    margin-block: 3rem
+    width: 100%
+    opacity: 0.5
+    font-weight: 300
+    text-align: center
+
+    a
+        color: $accent
+        text-decoration: none
+
+        &:hover
+            text-decoration: underline
+
+input
+    width: 100%
+
+    font-size: 16px
+    border: 0
+    border-radius: 5px
+    padding: 0.5rem
+    color: $fg
+    background: $bg-light
+    outline: none
+
+    margin-bottom: 1rem
+
+svg.loading
+    width: 150px
+    height: 150px
+    filter: invert(1)
+
+*::selection
+    color: $bg
+    background: $accent-light

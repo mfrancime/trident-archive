@@ -1,0 +1,74 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+dist-isolation
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment variables
+.env
+
+# Kubernetes secrets (use secrets.yaml.example as template)
+secrets.yaml
+
+target
+
+# Tauri signing keys
+*.key
+tauri.key
+.tauri/
+*storybook.log
+storybook-static
+
+# Eval results
+evals/
+
+# Dev Ex custom things
+mise*.toml
+mise.toml
+.claude/**
+!.claude/commands/
+!.claude/commands/**
+!.claude/agents/
+!.claude/agents/**
+!.claude/rules/
+!.claude/rules/**
+.zed/**
+.zedscratches/**
+.mcp.json
+
+# iOS fastlane local bundle
+src-tauri/gen/apple/vendor/
+src-tauri/gen/apple/.bundle/
+
+.worktrees/
+
+# Playwright / e2e
+test-results/
+playwright-report/
+blob-report/
+
+# Powersync
+public/@powersync/**
+
+# Astro
+.astro/

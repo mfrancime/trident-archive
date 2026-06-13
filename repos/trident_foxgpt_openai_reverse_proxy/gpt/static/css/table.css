@@ -1,0 +1,22 @@
+table {
+  width: 100%;
+  text-align: left;
+  border-spacing: 0;
+  margin-bottom: 2rem;
+  border-radius: 4px;
+  border-collapse: collapse;
+}
+table th {
+  padding: 0.5rem;
+  font-weight: bold;
+  background: #382b54;
+}
+table td {
+  padding: 0.5rem;
+}
+table tr:nth-child(even) {
+  background: #140f1e;
+}
+table tr.total {
+  font-weight: bold;
+}/*# sourceMappingURL=table.css.map */

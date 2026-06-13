@@ -1,0 +1,9 @@
+{
+  "name": "core",
+  "projectType": "library",
+  "targets": {
+    "compile": {},
+    "check": {}
+  },
+  "tags": ["library"]
+}

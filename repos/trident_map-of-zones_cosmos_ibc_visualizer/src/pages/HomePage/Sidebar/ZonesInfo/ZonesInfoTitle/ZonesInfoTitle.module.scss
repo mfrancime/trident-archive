@@ -1,0 +1,50 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 12px;
+
+  .zonesCountInfo {
+    display: flex;
+    align-items: center;
+    font-size: var(--font-heading-size-sm);
+  }
+
+  .search {
+    width: 100%;
+  }
+
+  .search input {
+    font-size: var(--font-base-size-md);
+  }
+
+  &.expanded {
+    .zonesCountInfo {
+      display: none;
+    }
+  }
+
+  .iconWrapper {
+    position: absolute;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+
+    &:hover {
+      .loopIcon {
+        stroke: var(--grey-800);
+      }
+    }
+
+    .loopIcon {
+      stroke: var(--grey-500);
+    }
+  }
+}

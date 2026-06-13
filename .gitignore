@@ -4,3 +4,8 @@ bundles/
 build.log
 .tmp*/
 .tmp_retry/
+
+push.log
+push-*.log
+push-*.out.log
+push-*.err.log

@@ -1,0 +1,39 @@
+definitions:
+  add: &top-comment
+    content: >
+      /**
+       * NOTE: THIS IS AN AUTO-GENERATED FILE. DO NOT MODIFY IT DIRECTLY.
+       */
+      /* eslint-disable */
+
+schema: https://api2.mapofzones.com/v1/graphql
+overwrite: true
+documents: 'src/graphql/v2/**/!(*.generated).{graphql,tsx,ts}'
+hooks:
+  afterAllFileWrite:
+    - prettier --write
+generates:
+  ./src/graphql/server-schema.graphql:
+    plugins:
+      - schema-ast
+  ./src/graphql/base-types.ts:
+    plugins:
+      - add: *top-comment
+      - typescript
+  ./src/:
+    preset: near-operation-file
+    presetConfig:
+      extension: .generated.ts
+      baseTypesPath: graphql/base-types.ts
+      folder: __generated__
+    plugins:
+      - add: *top-comment
+      - typescript-operations
+      - typed-document-node
+config:
+  namingConvention: change-case-all#pascalCase
+  transformUnderscore: true
+  constEnums: true
+  preResolveTypes: true
+  operationResultSuffix: 'Result'
+  skipTypename: true

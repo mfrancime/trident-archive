@@ -1,0 +1,430 @@
+name: iOS Release
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 1.2.3 without v prefix)'
+        required: true
+        type: string
+      nightly:
+        description: 'Is this a nightly build?'
+        required: false
+        default: false
+        type: boolean
+      notify_testers:
+        description: 'Notify external testers'
+        required: false
+        default: false
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 1.2.3 without v prefix)'
+        required: true
+        type: string
+      version_type:
+        description: 'Type of version bump (auto, patch, minor, major)'
+        required: false
+        type: choice
+        default: 'auto'
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+      skip_version_bump:
+        description: 'Skip version bumping and use existing version'
+        required: false
+        default: false
+        type: boolean
+      skip_build:
+        description: 'Skip building and deploying (run version bump only)'
+        required: false
+        default: false
+        type: boolean
+      notify_testers:
+        description: 'Notify external testers'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ios-release-${{ inputs.version }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build_and_deploy_ios:
+    if: ${{ !inputs.skip_build }}
+    runs-on: macos-26
+    environment: thunderbolt_release
+    outputs:
+      build_version: ${{ steps.determine_version.outputs.build_version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          ref: v${{ inputs.version }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
+        with:
+          node-version: 'lts/*'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # using commit hash for security reasons
+
+      - name: Display version information
+        env:
+          INPUT_NIGHTLY: ${{ inputs.nightly }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$INPUT_NIGHTLY" == "true" ]; then
+            echo "🌙 Nightly build"
+          fi
+          if [ -n "$INPUT_VERSION" ]; then
+            echo "🏷️ Using specified version: $INPUT_VERSION"
+          else
+            CURRENT_VERSION=$(node -p "require('./package.json').version")
+            echo "📦 Current version: $CURRENT_VERSION"
+          fi
+
+      - name: Determine build version
+        id: determine_version
+        uses: ./.github/actions/determine-version
+        with:
+          version: ${{ inputs.version }}
+          version_type: ${{ inputs.version_type }}
+
+      - name: Export build version env
+        env:
+          BUILD_VERSION: ${{ steps.determine_version.outputs.build_version }}
+        run: echo "BUILD_VERSION=$BUILD_VERSION" >> $GITHUB_ENV
+
+      - name: Set build version locally for TestFlight
+        run: |
+          VERSION="$BUILD_VERSION"
+
+          # Apple requires CFBundleShortVersionString and CFBundleVersion to be
+          # period-separated integers. Strip any prerelease suffix for Apple fields.
+          APPLE_VERSION="${VERSION%%-*}"
+
+          # CFBundleVersion must be unique per TestFlight upload and must
+          # monotonically increase within a marketing-version train. Using git
+          # commit count gives a single, consistent scheme for both nightly and
+          # stable builds — avoiding collisions where a nightly date integer
+          # (e.g., 20260206) would permanently block a stable build (e.g., 0.5.0)
+          # for the same CFBundleShortVersionString.
+          APPLE_BUILD_VERSION="$(git rev-list --count HEAD)"
+
+          echo "🔧 Applying version $VERSION locally (Apple marketing: $APPLE_VERSION, build: $APPLE_BUILD_VERSION)"
+
+          # Validate Apple version is three period-separated integers
+          if ! [[ "$APPLE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ APPLE_VERSION '$APPLE_VERSION' is not valid for Apple (expected X.Y.Z)"
+            exit 1
+          fi
+
+          # package.json keeps the full version; tauri.conf.json uses the Apple-
+          # compatible version so Tauri doesn't regenerate project files with
+          # the prerelease suffix.
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '${VERSION}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+
+            const conf = JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json', 'utf8'));
+            conf.version = '${APPLE_VERSION}';
+            fs.writeFileSync('src-tauri/tauri.conf.json', JSON.stringify(conf, null, 2) + '\n');
+          "
+
+          # macOS sed requires an empty backup suffix
+          sed -i '' "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
+
+          # Update iOS project.yml version if it exists
+          if [ -f "src-tauri/gen/apple/project.yml" ]; then
+            sed -i '' "s/CFBundleShortVersionString: .*/CFBundleShortVersionString: $APPLE_VERSION/" src-tauri/gen/apple/project.yml
+            sed -i '' "s/CFBundleVersion: .*/CFBundleVersion: \"$APPLE_BUILD_VERSION\"/" src-tauri/gen/apple/project.yml
+            echo "✅ Updated iOS project.yml to $APPLE_VERSION (build: $APPLE_BUILD_VERSION)"
+          fi
+
+      - name: Install Rust stable toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@2b1f5e9b395427c92ee4e3331786ca3c37afe2d7 # v1
+        with:
+          toolchain: stable
+          cache: false
+          rustflags: ''
+
+      - name: Cache Cargo registry and build
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.0.2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-ios-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-ios-
+            ${{ runner.os }}-cargo-
+
+      - name: Install iOS targets
+        run: |
+          rustup target add aarch64-apple-ios
+          rustup target add aarch64-apple-ios-sim
+          rustup target add x86_64-apple-ios
+
+      - name: Select Xcode 26.2
+        uses: mobiledevops/xcode-select-version-action@a58204ef24b6e61857940e51c0e11b0368065b94 # v1
+        with:
+          xcode-select-version: '26.2'
+
+      - name: Fix Xcode 26 Metal Toolchain Issue
+        # Xcode 26+ adds MetalToolchain to TOOLCHAINS before XcodeDefault, causing
+        # Swift compatibility libraries to not be found. Since Tauri invokes xcodebuild
+        # internally (we can't pass -toolchain flag), we must remove the Metal toolchain.
+        # See: https://github.com/actions/runner-images/issues/13135#issuecomment-3397914993
+        run: |
+          echo "🔧 Removing Metal Toolchain to prevent TOOLCHAINS override..."
+          xcodebuild -deleteComponent metalToolchain || sudo rm -rf /System/Library/AssetsV2/com_apple_MobileAsset_MetalToolchain || true
+          echo "TOOLCHAINS=com.apple.dt.toolchain.XcodeDefault" >> $GITHUB_ENV
+          echo "✅ Metal Toolchain removed"
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@cf7216d52fba1017929b4d7162fabe2b30af5b49 # v1.262.0
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+          working-directory: src-tauri/gen/apple
+
+      - name: Install Fastlane
+        working-directory: src-tauri/gen/apple
+        run: |
+          bundle install
+
+      - name: Setup Apple certificates and provisioning profiles
+        working-directory: src-tauri/gen/apple
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          PROVISIONING_PROFILE: ${{ secrets.APP_STORE_PROVISIONING_PROFILE }}
+        run: |
+          # Validate required secrets
+          if [ -z "$APPLE_CERTIFICATE_P12" ] || [ -z "$APPLE_CERTIFICATE_PASSWORD" ] || [ -z "$PROVISIONING_PROFILE" ]; then
+            echo "❌ Required secrets are not set"
+            exit 1
+          fi
+
+          # Create certificates directory
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+
+          # Decode and install certificate
+          CLEAN_CERT=$(echo "$APPLE_CERTIFICATE_P12" | tr -d '\n\r\t ' | tr -d '[:space:]')
+          echo "$CLEAN_CERT" | base64 --decode > certificate.p12
+
+          if [ ! -s certificate.p12 ]; then
+            echo "❌ Failed to decode certificate"
+            exit 1
+          fi
+
+          # Create temporary keychain
+          security create-keychain -p "temp-keychain-password" build.keychain
+          security set-keychain-settings -lut 21600 build.keychain
+          security unlock-keychain -p "temp-keychain-password" build.keychain
+          security list-keychains -d user -s build.keychain login.keychain
+
+          # Convert certificate to macOS-compatible format
+          openssl pkcs12 -in certificate.p12 -out temp_cert.pem -clcerts -nokeys -passin pass:"$APPLE_CERTIFICATE_PASSWORD"
+          openssl pkcs12 -in certificate.p12 -out temp_key.pem -nocerts -nodes -passin pass:"$APPLE_CERTIFICATE_PASSWORD"
+          openssl pkcs12 -export -out macos_certificate.p12 -inkey temp_key.pem -in temp_cert.pem -passout pass:"$APPLE_CERTIFICATE_PASSWORD" -keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1
+
+          # Import the converted certificate
+          security import macos_certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+
+          # Clean up temporary files
+          rm temp_cert.pem temp_key.pem macos_certificate.p12
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "temp-keychain-password" build.keychain
+
+          # Install provisioning profile
+          echo "$PROVISIONING_PROFILE" | base64 --decode > profile.mobileprovision
+
+          if [ ! -s profile.mobileprovision ]; then
+            echo "❌ Failed to decode provisioning profile"
+            exit 1
+          fi
+
+          # Extract profile info
+          PROFILE_UUID=$(security cms -D -i profile.mobileprovision | plutil -extract UUID raw -)
+          PROFILE_NAME=$(security cms -D -i profile.mobileprovision | plutil -extract Name raw -)
+
+          # Install profile
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"$PROFILE_UUID".mobileprovision
+
+          # Export for later use
+          echo "PROVISIONING_PROFILE_NAME=$PROFILE_NAME" >> $GITHUB_ENV
+          echo "PROVISIONING_PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
+
+          # Clean up sensitive files
+          rm certificate.p12 profile.mobileprovision
+
+      - name: Setup App Store Connect API Key
+        working-directory: src-tauri/gen/apple
+        env:
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        run: |
+          mkdir -p fastlane
+
+          # Decode API key (try base64 first, fallback to raw)
+          if echo "$APP_STORE_CONNECT_API_KEY" | base64 --decode > fastlane/AuthKey_$APP_STORE_CONNECT_API_KEY_ID.p8 2>/dev/null; then
+            echo "✅ Decoded base64 API key"
+          else
+            echo "$APP_STORE_CONNECT_API_KEY" > fastlane/AuthKey_$APP_STORE_CONNECT_API_KEY_ID.p8
+          fi
+
+          # Set environment variables for Tauri build
+          APPLE_API_KEY_PATH="$(pwd)/fastlane/AuthKey_$APP_STORE_CONNECT_API_KEY_ID.p8"
+          echo "APPLE_API_KEY_PATH=$APPLE_API_KEY_PATH" >> $GITHUB_ENV
+
+      - name: Install frontend dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build frontend
+        run: |
+          echo "VITE_THUNDERBOLT_CLOUD_URL: $VITE_THUNDERBOLT_CLOUD_URL"
+          bun run build
+        env:
+          VITE_THUNDERBOLT_CLOUD_URL: ${{ vars.VITE_THUNDERBOLT_CLOUD_URL }}
+          NODE_OPTIONS: '--max-old-space-size=8192'
+
+      - name: Build Tauri iOS App
+        env:
+          APPLE_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          RUSTC_WRAPPER: ''
+          SCCACHE_DISABLE: '1'
+          VITE_THUNDERBOLT_CLOUD_URL: ${{ vars.VITE_THUNDERBOLT_CLOUD_URL }}
+          NODE_OPTIONS: '--max-old-space-size=8192'
+        run: |
+          bun install --frozen-lockfile
+
+          # Create export options plist to work around Fastlane Xcode 16 bug
+          # See: https://github.com/fastlane/fastlane/issues/29256
+          # Keeping for Xcode 26 until compatibility is confirmed
+          cd src-tauri/gen/apple
+          cat > ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>teamID</key>
+              <string>$APPLE_TEAM_ID</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>net.thunderbird.thunderbolt</key>
+                  <string>$PROVISIONING_PROFILE_NAME</string>
+              </dict>
+          </dict>
+          </plist>
+          EOF
+          cd ../../../
+
+          bun tauri ios build --export-method app-store-connect
+
+      - name: Upload to TestFlight
+        working-directory: src-tauri/gen/apple
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          # Find the built IPA file
+          IPA_PATH=$(find build -name "*.ipa" -type f | head -1)
+
+          if [ -f "$IPA_PATH" ]; then
+            # Create API key file for Transporter
+            mkdir -p ~/.appstoreconnect/private_keys
+            
+            # Write API key (handle both base64 and raw P8)
+            if echo "$ASC_KEY" | grep -q "BEGIN PRIVATE KEY"; then
+              echo "$ASC_KEY" > ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8
+            else
+              echo "$ASC_KEY" | base64 -d > ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8
+            fi
+            chmod 600 ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8
+            
+            # Create Transporter configuration
+            echo "sessionTimeout = 30000" > /tmp/transporter_config.properties
+            echo "readTimeout = 30000" >> /tmp/transporter_config.properties
+            echo "connectionTimeout = 30000" >> /tmp/transporter_config.properties
+            
+            # Use Transporter directly (bypasses altool parsing issues)
+            /Applications/Xcode.app/Contents/SharedFrameworks/ContentDeliveryServices.framework/itms/bin/iTMSTransporter \
+              -m upload \
+              -f "$IPA_PATH" \
+              -k ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8 \
+              -jwt-issuer "$ASC_ISSUER_ID" \
+              -jwt-kid "$ASC_KEY_ID" \
+              -t Signiant \
+              -v informational \
+              -Dtransporter.client.properties=/tmp/transporter_config.properties || {
+              
+              # Fallback: Use altool
+              xcrun altool --upload-app \
+                --type ios \
+                --file "$IPA_PATH" \
+                --apiKey "$ASC_KEY_ID" \
+                --apiIssuer "$ASC_ISSUER_ID" \
+                --apiKeyFilePath ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8 \
+                --verbose
+            }
+            
+            upload_result=$?
+            
+            # Clean up files
+            rm -f ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8
+            rm -f /tmp/transporter_config.properties
+            
+            if [ $upload_result -ne 0 ]; then
+              echo "❌ Upload failed with exit code $upload_result"
+              exit 1
+            fi
+          else
+            echo "❌ No IPA file found in build directory"
+            exit 1
+          fi
+
+      - name: Upload build artifacts (if build fails)
+        if: failure()
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: ios-build-logs-${{ github.run_id }}
+          path: |
+            src-tauri/gen/apple/fastlane/logs/
+            src-tauri/gen/apple/*.log
+            ~/Library/Logs/gym/
+          retention-days: 7
+
+      - name: Clean up keychain
+        if: always()
+        run: |
+          security delete-keychain build.keychain || true
+
+      - name: Clean up sensitive files
+        if: always()
+        working-directory: src-tauri/gen/apple
+        run: |
+          rm -f fastlane/AuthKey_*.p8
+          rm -f ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision

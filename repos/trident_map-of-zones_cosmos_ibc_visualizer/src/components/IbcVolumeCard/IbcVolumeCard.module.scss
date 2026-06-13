@@ -1,0 +1,56 @@
+.container {
+  display: grid;
+  grid-template-areas:
+    'title chart'
+    'volume chart'
+    'lineChart lineChart'
+    'volumeIn volumeOut'
+    'volumeInPending volumeOutPending';
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: flex-start;
+  min-height: 150px;
+  padding: 16px;
+  background-color: var(--black-700);
+
+  .chart {
+    grid-area: chart;
+  }
+
+  &.vertical {
+    grid-template-areas:
+      'title title'
+      'volume volume'
+      'chart chart'
+      'lineChart lineChart'
+      'volumeIn volumeOut'
+      'volumeInPending volumeOutPending';
+
+    .chart {
+      min-height: 70px;
+      margin-top: 12px;
+    }
+  }
+
+  .title {
+    grid-area: title;
+    margin-bottom: 8px;
+
+    color: var(--grey-500);
+    font-size: var(--font-base-size-md);
+  }
+
+  .disclaimer {
+    margin-right: 8px;
+  }
+
+  .volumeValue {
+    grid-area: volume;
+
+    font-size: var(--font-heading-size-sm);
+  }
+
+  .volumeLineChart {
+    margin-top: 12px;
+    margin-bottom: 8px;
+  }
+}

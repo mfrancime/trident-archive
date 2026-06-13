@@ -1,0 +1,83 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "Capability for the main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "os:default",
+    "deep-link:default",
+    "updater:default",
+    "core:event:default",
+    "core:window:allow-hide",
+    "core:window:allow-show",
+    "core:window:allow-set-focus",
+    "core:window:allow-set-skip-taskbar",
+    "core:window:allow-create",
+    "core:window:allow-close",
+    "core:webview:allow-create-webview-window",
+    "core:webview:allow-create-webview",
+    "core:webview:allow-webview-size",
+    "core:webview:allow-webview-position",
+    "core:webview:allow-set-webview-size",
+    "core:webview:allow-set-webview-position",
+    "core:webview:allow-webview-close",
+    "core:webview:allow-webview-hide",
+    "core:webview:allow-webview-show",
+    "core:window:allow-destroy",
+    "process:allow-exit",
+    "process:allow-restart",
+    "platform-utils:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "http://localhost:11434"
+        },
+        {
+          "url": "http://localhost:3001"
+        },
+        {
+          "url": "https://api.openai.com"
+        },
+        {
+          "url": "https://router.huggingface.co"
+        },
+        {
+          "url": "https://accounts.google.com"
+        },
+        {
+          "url": "https://www.googleapis.com"
+        },
+        {
+          "url": "https://login.microsoftonline.com"
+        },
+        {
+          "url": "https://graph.microsoft.com"
+        },
+        {
+          "url": "http://localhost:8000"
+        }
+      ]
+    },
+    "haptics:allow-selection-feedback",
+    "haptics:allow-impact-feedback",
+    "haptics:allow-notification-feedback",
+    "haptics:allow-vibrate",
+    "store:default",
+    "fs:default",
+    "fs:allow-app-write-recursive",
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [
+        {
+          "path": "$APPDATA/*"
+        }
+      ]
+    }
+  ],
+  "remote": {
+    "urls": ["http://localhost:1420/*"]
+  }
+}

@@ -1,0 +1,247 @@
+name: Version Bump and Release Generation
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform for the release (all, ios, android, desktop)'
+        required: false
+        type: choice
+        default: 'all'
+        options:
+          - all
+          - ios
+          - android
+          - desktop
+      version:
+        description: 'Explicit version to set (e.g., 1.2.3). Overrides detection.'
+        required: false
+        type: string
+      version_type:
+        description: 'Type of version bump (patch, minor, major, auto)'
+        required: false
+        type: choice
+        default: 'auto'
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+  workflow_call:
+    inputs:
+      platform:
+        description: 'Platform for the release (all, ios, android, desktop)'
+        required: false
+        type: string
+        default: 'all'
+      version:
+        description: 'Explicit version to set (e.g., 1.2.3). Overrides detection.'
+        required: false
+        type: string
+      version_type:
+        description: 'Type of version bump (patch, minor, major, auto)'
+        required: false
+        type: string
+        default: 'auto'
+      nightly:
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      new_version:
+        description: 'The new version that was created'
+        value: ${{ jobs.version_bump.outputs.new_version }}
+      tag_name:
+        description: 'The tag name that was created'
+        value: ${{ jobs.version_bump.outputs.tag_name }}
+
+permissions:
+  contents: write
+
+jobs:
+  version_bump:
+    runs-on: ubuntu-latest
+    environment: thunderbolt_release
+    outputs:
+      new_version: ${{ steps.version.outputs.new_version }}
+      tag_name: ${{ steps.tag.outputs.tag_name }}
+
+    steps:
+      - name: Generate release token
+        id: app-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ secrets.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+
+      # Regular releases: use existing create-release script
+      - name: Run create-release script
+        if: ${{ !inputs.nightly }}
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_VERSION_TYPE: ${{ inputs.version_type }}
+          INPUT_PLATFORM: ${{ inputs.platform }}
+        run: |
+          # Build arguments for the script using an array to prevent argument injection
+          ARGS=(--push)
+
+          if [ -n "$INPUT_VERSION" ]; then
+            ARGS+=(--version "$INPUT_VERSION")
+          else
+            ARGS+=(--type "$INPUT_VERSION_TYPE")
+          fi
+
+          if [ -n "$INPUT_PLATFORM" ]; then
+            ARGS+=(--platform "$INPUT_PLATFORM")
+          fi
+
+          echo "Running: bun run scripts/create-release.ts ${ARGS[*]}"
+          bun run scripts/create-release.ts "${ARGS[@]}"
+
+      # Nightly: generate version and tag without committing to main
+      - name: Prepare nightly version
+        if: ${{ inputs.nightly }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BASE_VERSION=$(node -p "require('./package.json').version")
+          NIGHTLY_VERSION="${BASE_VERSION}-nightly.$(date -u +%Y%m%d)"
+          NIGHTLY_TAG="v${NIGHTLY_VERSION}"
+
+          # Update version files locally
+          node -e "const fs=require('fs'),p=JSON.parse(fs.readFileSync('package.json'));p.version='$NIGHTLY_VERSION';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          sed -i "s/^version = \".*\"/version = \"$NIGHTLY_VERSION\"/" src-tauri/Cargo.toml
+          node -e "const fs=require('fs'),c=JSON.parse(fs.readFileSync('src-tauri/tauri.conf.json'));c.version='$BASE_VERSION';fs.writeFileSync('src-tauri/tauri.conf.json',JSON.stringify(c,null,2)+'\n')"
+
+          # If a nightly tag for today already exists (re-run / manual trigger),
+          # remove the old tag and its GitHub release so we can replace them.
+          if git ls-remote --tags origin | grep -q "refs/tags/${NIGHTLY_TAG}$"; then
+            echo "⚠️  Tag $NIGHTLY_TAG already exists — replacing it"
+            gh release delete "$NIGHTLY_TAG" --yes --cleanup-tag 2>/dev/null || true
+            git tag -d "$NIGHTLY_TAG" 2>/dev/null || true
+            git push origin ":refs/tags/${NIGHTLY_TAG}" 2>/dev/null || true
+          fi
+
+          # Create commit and tag (not pushed to main branch, only the tag)
+          git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
+          git commit -m "chore: nightly build $NIGHTLY_VERSION"
+          git tag -a "$NIGHTLY_TAG" -m "Nightly build $NIGHTLY_VERSION"
+          git push origin "$NIGHTLY_TAG"
+
+      - name: Extract outputs
+        id: version
+        env:
+          INPUT_VERSION_TYPE: ${{ inputs.version_type }}
+        run: |
+          # Get the version from package.json (which was just updated)
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Version: $NEW_VERSION"
+
+          # Output the version type
+          echo "version_type=$INPUT_VERSION_TYPE" >> $GITHUB_OUTPUT
+          echo "📝 Version type: $INPUT_VERSION_TYPE"
+
+      - name: Extract tag name
+        id: tag
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+          PLATFORM: ${{ inputs.platform }}
+        run: |
+          # Determine tag name based on platform
+          if [ "$PLATFORM" == "all" ] || [ -z "$PLATFORM" ]; then
+            TAG_NAME="v$NEW_VERSION"
+          else
+            TAG_NAME="v$NEW_VERSION-$PLATFORM-rc"
+          fi
+
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "🏷️  Tag: $TAG_NAME"
+
+      - name: Generate changelog
+        if: ${{ !inputs.nightly }}
+        id: changelog
+        env:
+          TAG_NAME: ${{ steps.tag.outputs.tag_name }}
+        run: |
+          # Find the previous version tag (excluding the one just created)
+          PREV_TAG=$(git tag --sort=-creatordate | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | grep -v "${TAG_NAME}" | head -1 || true)
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag found; using full history"
+            git log --pretty=format:"- %s (%h) by %an" > changelog.txt
+          else
+            echo "Generating changelog since $PREV_TAG"
+            git log --pretty=format:"- %s (%h) by %an" "$PREV_TAG..HEAD" > changelog.txt
+          fi
+
+          # Use base64 encoding to safely pass multiline content
+          CHANGELOG_B64=$(base64 -w 0 changelog.txt)
+          echo "changelog_b64=$CHANGELOG_B64" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        if: ${{ !inputs.nightly }}
+        env:
+          CHANGELOG_B64: ${{ steps.changelog.outputs.changelog_b64 }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLATFORM: ${{ inputs.platform }}
+          TAG_NAME: ${{ steps.tag.outputs.tag_name }}
+          VERSION: ${{ steps.version.outputs.new_version }}
+          VERSION_TYPE: ${{ steps.version.outputs.version_type }}
+        run: |
+          # Decode the changelog
+          CHANGELOG=$(echo "$CHANGELOG_B64" | base64 -d)
+
+          # Create release using GitHub CLI
+          if [ "$PLATFORM" == "all" ]; then
+            # Unified release for all platforms
+            gh release create "$TAG_NAME" \
+              --title "Release $TAG_NAME" \
+              --notes "## Release $TAG_NAME
+
+          - Version: $VERSION
+          - Version type: $VERSION_TYPE
+
+          ## Changelog
+          $CHANGELOG
+
+          ### Platform Builds
+          - ✅ Desktop: Building via CI
+          - ✅ iOS: Building and deploying to TestFlight
+          - ✅ Android: Building and deploying to Play Store (Internal)" \
+              --draft \
+              --prerelease
+          else
+            # Platform-specific RC release
+            gh release create "$TAG_NAME" \
+              --title "Release Candidate $TAG_NAME" \
+              --notes "## Release Candidate $TAG_NAME
+
+          This is a release candidate for $PLATFORM platform.
+
+          - Version: $VERSION
+          - Platform: $PLATFORM
+          - Version type: $VERSION_TYPE
+
+          ## Changelog
+          $CHANGELOG
+
+          ### Next Steps
+          After successful build and testing, the final release will be created." \
+              --draft \
+              --prerelease
+          fi

@@ -1,0 +1,91 @@
+.zonesTotalInfo {
+  grid-template-columns: 1.65fr 1fr 1fr 1.65fr 1.65fr;
+}
+
+.title {
+  display: block;
+
+  color: var(--grey-500);
+  font-size: var(--font-base-size-md);
+  white-space: nowrap;
+}
+
+.total {
+  color: var(--green);
+  font-size: var(--font-secondary-size-md);
+  text-align: right;
+}
+
+.value {
+  display: block;
+  margin-top: 8px;
+
+  font-size: var(--font-base-size-md);
+  font-feature-settings: 'tnum' on, 'lnum' on;
+}
+
+.cardNumbers {
+  display: flex;
+  flex-direction: column;
+}
+
+.pendingValue {
+  color: var(--grey-500);
+  font-size: var(--font-secondary-size-md);
+  font-feature-settings: 'tnum' on, 'lnum' on;
+}
+
+.zonesPairContainer {
+  margin-right: 8px;
+}
+
+.chart {
+  height: 40px !important;
+  margin-left: 24px;
+}
+
+.card {
+  &.doubleItem {
+    display: flex;
+
+    .value {
+      font-size: var(--font-heading-size-sm);
+    }
+  }
+
+  .mainValue {
+    font-size: var(--font-heading-size-sm);
+  }
+
+  &.topItem {
+    display: flex;
+    justify-content: space-between;
+
+    .pendingValue {
+      justify-content: flex-end;
+      margin-top: 6px;
+    }
+  }
+
+  &.withChart {
+    display: flex;
+  }
+
+  .additionalDataContainer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 1280px) {
+  .card {
+    min-width: 300px;
+  }
+}
+
+@media (max-width: 630px) {
+  .card {
+    margin: 16px;
+  }
+}

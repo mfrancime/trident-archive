@@ -1,0 +1,36 @@
+.input {
+  padding: 6px 12px;
+
+  color: var(--grey-300);
+
+  background-color: var(--black-100);
+  border: none;
+  border-radius: 5px;
+  outline: none;
+
+  /* Chrome, Firefox, Opera, Safari 10.1+ */
+  &::placeholder {
+    color: var(--grey-100);
+
+    opacity: 1; /* Firefox */
+  }
+
+  /* Microsoft Edge */
+  &::input-placeholder {
+    color: var(--grey-100);
+  }
+
+  &:focus,
+  &:hover {
+    &::placeholder {
+      color: var(--grey-500);
+
+      opacity: 1; /* Firefox */
+    }
+
+    /* Microsoft Edge */
+    &::input-placeholder {
+      color: var(--grey-300);
+    }
+  }
+}

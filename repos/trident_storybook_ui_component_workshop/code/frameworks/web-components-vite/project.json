@@ -1,0 +1,9 @@
+{
+  "name": "web-components-vite",
+  "projectType": "library",
+  "targets": {
+    "compile": {},
+    "check": {}
+  },
+  "tags": ["library"]
+}

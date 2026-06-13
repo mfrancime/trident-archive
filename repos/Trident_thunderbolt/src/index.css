@@ -1,0 +1,289 @@
+@import 'tailwindcss';
+
+@plugin 'tailwindcss-animate';
+@plugin '@tailwindcss/typography';
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-background: oklch(1 0 0);
+  --color-foreground: oklch(0.145 0 0);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.145 0 0);
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.145 0 0);
+  --color-primary: #191919;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f7f7f8;
+  --color-secondary-foreground: #000000;
+  --color-tertiary: #808080;
+  --color-muted: oklch(0.97 0 0);
+  --color-muted-foreground: oklch(0.556 0 0);
+  --color-accent: oklch(0.97 0 0);
+  --color-accent-foreground: oklch(0.205 0 0);
+  --color-destructive: oklch(0.577 0.245 27.325);
+  --color-destructive-foreground: oklch(0.577 0.245 27.325);
+  --color-border: oklch(0.922 0 0);
+  --color-input: oklch(0.922 0 0);
+  --color-ring: oklch(0.708 0 0);
+  --color-chart-1: oklch(0.646 0.222 41.116);
+  --color-chart-2: oklch(0.6 0.118 184.704);
+  --color-chart-3: oklch(0.398 0.07 227.392);
+  --color-chart-4: oklch(0.828 0.189 84.429);
+  --color-chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --color-sidebar: oklch(0.985 0 0);
+  --color-sidebar-foreground: oklch(0.145 0 0);
+  --color-sidebar-primary: oklch(0.205 0 0);
+  --color-sidebar-primary-foreground: oklch(0.985 0 0);
+  --color-sidebar-accent: oklch(0.97 0 0);
+  --color-sidebar-accent-foreground: oklch(0.205 0 0);
+  --color-sidebar-border: oklch(0.922 0 0);
+  --color-sidebar-ring: oklch(0.708 0 0);
+  --color-card-border: #dee8df;
+}
+
+/* ===========================
+   Responsive Touch Target System
+   =========================== */
+:root {
+  /* Heights - Touch targets */
+  --touch-height-xl: 3.5rem; /* 56px mobile */
+  --touch-height-lg: 3rem; /* 48px mobile */
+  --touch-height-default: 2.75rem; /* 44px mobile - primary touch target */
+  --touch-height-sm: 2.5rem; /* 40px mobile */
+
+  /* Icon sizes */
+  --icon-size-default: 1.25rem; /* 20px mobile */
+  --icon-size-sm: 1rem; /* 16px mobile */
+
+  /* Font sizes */
+  --font-size-body: 1rem; /* 16px mobile */
+  --font-size-sm: 0.875rem; /* 14px mobile */
+  --font-size-xs: 0.75rem; /* 12px mobile */
+
+  /* Border radius - overrides Tailwind's default --radius-* theme values */
+  --radius-sm: 0.25rem; /* 4px mobile */
+  --radius-md: 0.5rem; /* 8px mobile */
+  --radius-lg: 0.75rem; /* 12px mobile */
+  --radius-xl: 1rem; /* 16px mobile */
+  --radius-2xl: 1.25rem; /* 20px mobile */
+
+  /* Minimum sizes */
+  --min-touch-height: 2.5rem; /* 40px mobile */
+
+  /* Switch component specific */
+  --switch-track-height: 1.5rem; /* 24px mobile - slightly larger for touch */
+  --switch-track-width: 2.75rem; /* 44px mobile */
+  --switch-thumb-size: 1.25rem; /* 20px mobile */
+  --switch-thumb-translate: calc(var(--switch-track-width) - var(--switch-thumb-size) - 2px);
+}
+
+@media (min-width: 768px) {
+  :root {
+    /* Heights - Desktop values */
+    --touch-height-xl: 3rem; /* 48px desktop */
+    --touch-height-lg: 2.5rem; /* 40px desktop */
+    --touch-height-default: 2.25rem; /* 36px desktop */
+    --touch-height-sm: 2rem; /* 32px desktop */
+
+    /* Icon sizes */
+    --icon-size-default: 1rem; /* 16px desktop */
+    --icon-size-sm: 0.875rem; /* 14px desktop */
+
+    /* Font sizes */
+    --font-size-body: 0.875rem; /* 14px desktop */
+    --font-size-sm: 0.75rem; /* 12px desktop */
+    --font-size-xs: 0.625rem; /* 10px desktop */
+
+    /* Border radius - overrides Tailwind's default --radius-* theme values */
+    --radius-sm: 0.125rem; /* 2px desktop */
+    --radius-md: 0.375rem; /* 6px desktop */
+    --radius-lg: 0.5rem; /* 8px desktop */
+    --radius-xl: 0.75rem; /* 12px desktop */
+    --radius-2xl: 1rem; /* 16px desktop */
+
+    /* Minimum sizes */
+    --min-touch-height: 0; /* No min on desktop */
+
+    /* Switch component specific */
+    --switch-track-height: 1.15rem; /* desktop */
+    --switch-track-width: 2rem; /* desktop */
+    --switch-thumb-size: 1rem; /* desktop */
+    --switch-thumb-translate: calc(var(--switch-track-width) - var(--switch-thumb-size) - 2px);
+  }
+}
+
+.dark {
+  --color-background: oklch(0.145 0 0);
+  --color-foreground: oklch(0.985 0 0);
+  --color-card: oklch(0.145 0 0);
+  --color-card-foreground: oklch(0.985 0 0);
+  --color-popover: oklch(0.145 0 0);
+  --color-popover-foreground: oklch(0.985 0 0);
+  --color-primary: oklch(0.985 0 0);
+  --color-primary-foreground: oklch(0.205 0 0);
+  --color-secondary: oklch(0.269 0 0);
+  --color-secondary-foreground: oklch(0.985 0 0);
+  --color-muted: oklch(0.269 0 0);
+  --color-muted-foreground: oklch(0.708 0 0);
+  --color-accent: oklch(0.269 0 0);
+  --color-accent-foreground: oklch(0.985 0 0);
+  --color-destructive: oklch(0.396 0.141 25.723);
+  --color-destructive-foreground: oklch(0.637 0.237 25.331);
+  --color-border: oklch(0.269 0 0);
+  --color-input: oklch(0.269 0 0);
+  --color-ring: oklch(0.439 0 0);
+  --color-chart-1: oklch(0.488 0.243 264.376);
+  --color-chart-2: oklch(0.696 0.17 162.48);
+  --color-chart-3: oklch(0.769 0.188 70.08);
+  --color-chart-4: oklch(0.627 0.265 303.9);
+  --color-chart-5: oklch(0.645 0.246 16.439);
+  --color-sidebar: oklch(0.205 0 0);
+  --color-sidebar-foreground: oklch(0.985 0 0);
+  --color-sidebar-primary: oklch(0.488 0.243 264.376);
+  --color-sidebar-primary-foreground: oklch(0.985 0 0);
+  --color-sidebar-accent: oklch(0.269 0 0);
+  --color-sidebar-accent-foreground: oklch(0.985 0 0);
+  --color-sidebar-border: oklch(0.269 0 0);
+  --color-sidebar-ring: oklch(0.439 0 0);
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@utility animate-accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+
+@utility animate-accordion-up {
+  animation: accordion-up 0.2s ease-out;
+}
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+    outline-color: oklch(from var(--color-ring) l c h / 0.5);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+}
+
+/* Global scrollbar hiding for consistent cross-platform appearance */
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+html,
+body {
+  overscroll-behavior: none;
+  overflow: hidden;
+}
+#root {
+  overflow: hidden;
+  display: flex;
+  height: 100svh;
+}
+
+@media (max-width: 768px) {
+  body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+/* Subtle table borders for markdown content */
+.prose-sm th {
+  @apply border-b border-muted-foreground/20;
+}
+
+.prose-sm td {
+  @apply border-b border-muted-foreground/16;
+}
+
+.prose-sm tr:last-child td {
+  @apply border-b-0;
+}
+
+.shimmer-container {
+  position: relative;
+  overflow: hidden; /* Crucial to contain the moving gradient */
+}
+
+.shimmer-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(31, 31, 31, 0.6) 35%,
+    rgba(31, 31, 31, 0.6) 65%,
+    transparent 100%
+  );
+  transform: translateX(-100%); /* Start off-screen to the left */
+  animation: shimmer 1.5s infinite linear; /* Apply the animation */
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(100%); /* Move across to the right */
+  }
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none; /* For Internet Explorer and Edge */
+  scrollbar-width: none; /* For Firefox */
+  overflow-y: auto; /* or overflow: auto; to only show scrollbar when needed */
+}
+
+/* For Chrome, Safari, and Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

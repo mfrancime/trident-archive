@@ -1,0 +1,9 @@
+{
+  "name": "eslint-plugin",
+  "projectType": "library",
+  "targets": {
+    "compile": {},
+    "check": {}
+  },
+  "tags": ["library"]
+}

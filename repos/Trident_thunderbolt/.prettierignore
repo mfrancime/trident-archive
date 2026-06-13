@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-isolation
+src-tauri/target
+src-tauri/gen
+*.min.js
+src/drizzle/**/*.sql
+thunderbird-mcp-bridge
+thunderbird-mcp-native
+package-lock.json
+bun.lock
+*.lock

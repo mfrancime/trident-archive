@@ -1,0 +1,36 @@
+.container {
+  position: relative;
+
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  height: 100%;
+
+  .selectorsContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 32px;
+    margin-bottom: 16px;
+  }
+
+  .columnDropdown {
+    width: 150px;
+  }
+
+  .scrollableTable {
+    margin: 0 -16px;
+  }
+
+  .shadow {
+    position: absolute;
+    bottom: 53px;
+    margin-left: -16px;
+
+    width: calc(100% + 32px);
+    height: 33px;
+
+    background: linear-gradient(0deg, #1e1c25 0%, rgb(30 28 37 / 0%) 100%);
+
+    pointer-events: none;
+  }
+}

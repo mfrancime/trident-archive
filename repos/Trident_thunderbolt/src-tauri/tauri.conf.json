@@ -1,0 +1,81 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Thunderbolt",
+  "version": "0.1.91",
+  "identifier": "net.thunderbird.thunderbolt",
+  "build": {
+    "beforeDevCommand": "bun run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "bun run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Thunderbolt",
+        "width": 1400,
+        "height": 1000,
+        "minHeight": 600,
+        "minWidth": 600,
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self' tauri: asset:",
+        "connect-src": "'self' ipc: http://ipc.localhost https: wss: http://localhost:8000 http://localhost:11434",
+        "img-src": "'self' asset: data: https://api.thunderbolt.io",
+        "font-src": "'self' data:",
+        "style-src": "'self' 'unsafe-inline'",
+        "script-src": "'self'"
+      }
+    },
+    "withGlobalTauri": true
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": true,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "iOS": {
+      "frameworks": [
+        "MetalPerformanceShaders.framework",
+        "MetalKit.framework",
+        "Metal.framework"
+      ],
+      "developmentTeam": "BUMSKVQ3D9"
+    },
+    "android": {
+      "versionCode": 1018
+    }
+  },
+  "plugins": {
+    "deep-link": {
+      "mobile": [
+        {
+          "scheme": [
+            "https"
+          ],
+          "host": "app.thunderbolt.io",
+          "pathPrefix": [
+            "/oauth/callback",
+            "/auth/verify"
+          ],
+          "appLink": true
+        }
+      ]
+    },
+    "updater": {
+      "endpoints": [
+        "https://cdn.crabnebula.app/update/thunderbird/thunderbolt/{{target}}-{{arch}}/{{current_version}}"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdDN0YxQTRGM0Y1QkZCNEYKUldSUCsxcy9UeHAvZkZHOWVQMzhGaWxFakFhT3JoUUFXUnJUbG9HNWRMYkoxM2NIanZENnlrd3YK"
+    }
+  }
+}

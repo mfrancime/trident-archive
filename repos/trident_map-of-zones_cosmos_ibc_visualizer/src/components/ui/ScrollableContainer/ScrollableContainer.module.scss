@@ -1,0 +1,9 @@
+.container {
+  &.vertical {
+    overflow-y: scroll;
+  }
+
+  &.horizontal {
+    overflow-x: scroll;
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "react-webpack5",
+  "projectType": "library",
+  "targets": {
+    "compile": {},
+    "check": {}
+  },
+  "tags": ["library"]
+}

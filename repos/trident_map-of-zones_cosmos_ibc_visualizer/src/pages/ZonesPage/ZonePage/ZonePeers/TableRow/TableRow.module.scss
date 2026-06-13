@@ -1,0 +1,88 @@
+.container {
+  height: 62px;
+
+  cursor: pointer;
+
+  .zonesInfoContainer {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    .zoneContainer {
+      position: absolute;
+
+      display: flex;
+      align-items: center;
+
+      .logoContainer {
+        position: relative;
+
+        margin-right: 12px;
+
+        border: 2px solid var(--black-100);
+        border-radius: 50%;
+      }
+
+      .zoneInfoContainer {
+        position: relative;
+      }
+
+      .zoneNameContainer {
+        display: flex;
+        align-items: center;
+      }
+    }
+  }
+
+  td {
+    .value {
+      font-size: var(--font-base-size-md);
+      font-feature-settings: 'tnum' on, 'lnum' on;
+    }
+  }
+
+  .arrowContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+  }
+
+  .status {
+    margin-left: 4px;
+  }
+
+  .channelsText {
+    margin-top: 2px;
+
+    font-size: var(--font-secondary-size-md);
+
+    opacity: 0.5;
+    font-feature-settings: 'tnum' on, 'lnum' on;
+  }
+
+  &.active,
+  &:hover {
+    td {
+      background-color: var(--black-500);
+    }
+
+    .zonesInfoContainer {
+      .zoneContainer {
+        .logoContainer {
+          border: 2px solid var(--black-500);
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 630px) {
+  .container {
+    .arrowContainer {
+      width: 34px;
+      margin-right: 12px;
+    }
+  }
+}

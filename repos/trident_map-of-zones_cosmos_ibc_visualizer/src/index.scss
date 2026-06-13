@@ -1,0 +1,152 @@
+* {
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  font-family: Roboto, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}
+
+:focus,
+:active {
+  outline: none;
+}
+
+a:focus,
+a:active {
+  outline: none;
+}
+
+input,
+button,
+textarea {
+  font-family: inherit;
+}
+
+input::-ms-clear {
+  display: none;
+}
+
+button {
+  cursor: pointer;
+}
+button::-moz-focus-inner {
+  padding: 0;
+  border: 0;
+}
+
+a,
+a:visited,
+a:hover {
+  text-decoration: none;
+}
+
+table {
+  border-spacing: 0;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  line-height: var(--line-height-base);
+}
+
+html,
+body {
+  height: 100%;
+
+  line-height: var(--line-height-base);
+}
+
+body {
+  color: var(--white);
+
+  background: var(--black-100);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  #root {
+    height: 100%;
+  }
+}
+
+::-webkit-scrollbar {
+  background-color: transparent;
+  width: 15px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--grey-300);
+  border-radius: 12px;
+  border: 6px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+a {
+  color: inherit;
+
+  cursor: pointer;
+
+  &:hover {
+    color: var(--white);
+  }
+}
+
+.alignRight {
+  text-align: right;
+}
+
+:root {
+  --white: #fff;
+  --black: #000;
+  --pink: #e1c;
+  --blue: #2af;
+  --green: #6d5;
+  --orange: #f90;
+  --red: #f45;
+  --black-100: #0e0e16;
+  --black-400: #1c1c25;
+  --black-500: #212129;
+  --black-600: #25252e;
+  --black-700: #2a2a33;
+  --black-900: #33333d;
+  --grey-100: #4f4f5a;
+  --grey-300: #6f6f78;
+  --grey-400: #7f7f87;
+  --grey-500: #8f8f96;
+  --grey-600: #9f9fa5;
+  --grey-800: #bfbfc3;
+  --grey-1100: #efeff0;
+  --line-height-base: 1.2;
+  --font-heading-size-lg: 28px;
+  --font-heading-size-md: 24px;
+  --font-heading-size-sm: 20px;
+  --font-navigation-size: 16px;
+  --font-base-size-lg: 15px;
+  --font-base-size-md: 14px;
+  --font-secondary-size-lg: 13px;
+  --font-secondary-size-md: 12px;
+  --font-secondary-size-sm: 11px;
+  --font-map-size-md: 10px;
+  --font-map-size-sm: 8px;
+  --max-page-width: 1440px;
+  --widget-width: 420px;
+  --widget-height: 684px;
+}

@@ -1,0 +1,29 @@
+.itemContainer {
+  display: flex;
+  flex-direction: column;
+
+  font-size: var(--font-base-size-md);
+
+  .title {
+    margin-bottom: 8px;
+
+    color: var(--grey-500);
+
+    .questionMark {
+      margin-left: 4px;
+    }
+  }
+
+  .value {
+    color: var(--white);
+  }
+
+  &.rowDirection {
+    flex-direction: row;
+    justify-content: space-between;
+
+    .title {
+      margin-bottom: 0;
+    }
+  }
+}
