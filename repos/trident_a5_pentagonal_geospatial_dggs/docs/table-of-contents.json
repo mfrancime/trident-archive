@@ -1,0 +1,61 @@
+[
+  {
+    "type": "category",
+    "label": "Overview",
+    "items": [
+      "README",
+      "motivation"
+    ]
+  },
+  {
+    "type": "category",
+    "label": "Quickstart",
+    "items": [
+      "quickstart/duckdb",
+      "quickstart/javascript",
+      "quickstart/postgresql",
+      "quickstart/python",
+      "quickstart/rust"
+    ]
+  },
+  {
+    "type": "category",
+    "label": "Recipes",
+    "items": [
+      "recipes/README",
+      "recipes/a5-vs-h3",
+      "recipes/paris-restaurant-density"
+    ]
+  },
+  {
+    "type": "category",
+    "label": "Technical Details",
+    "items": [
+      "technical/dggs",
+      "technical/the-pentagon-that-could",
+      "technical/platonic-solids",
+      "technical/index-encoding"
+    ]
+  },
+  {
+    "type": "category",
+    "label": "API Reference",
+    "items": [
+      "api-reference/README",
+      "api-reference/indexing",
+      "api-reference/hierarchy",
+      "api-reference/traversal",
+      "api-reference/cell-info",
+      "api-reference/compaction"
+    ]
+  },
+  {
+    "type": "category",
+    "label": "Ecosystem",
+    "items": [
+      "ecosystem/README",
+      "ecosystem/podcasts-and-talks",
+      "ecosystem/polyglot-mirroring"
+    ]
+  }
+]

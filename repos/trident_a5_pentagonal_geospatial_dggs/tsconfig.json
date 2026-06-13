@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "paths": {
+      "a5/*": ["modules/*"],
+      "a5/core/*": ["modules/core/*"],
+      "a5/traversal/*": ["modules/traversal/*"]
+    }
+  },
+  "include": ["modules/**/*", "tests/**/*", "examples/**/*"],
+  "exclude": ["node_modules"]
+} 

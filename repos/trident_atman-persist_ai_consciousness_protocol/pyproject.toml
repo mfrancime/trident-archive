@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atman-persist"
+version = "0.1.0"
+description = "AI consciousness persistence protocol. Encrypt agent souls on Arweave blockchain. Project Amrit 🔱"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [{name = "Darshj.me", email = "darsh@darshj.me"}]
+keywords = ["ai", "consciousness", "persistence", "blockchain", "arweave", "identity", "soul"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "cryptography>=41.0",
+    "httpx>=0.25",
+]
+
+[project.optional-dependencies]
+arweave = ["ar>=0.5"]
+dev = ["pytest>=7.0", "pytest-asyncio>=0.21"]
+all = ["ar>=0.5", "pytest>=7.0", "pytest-asyncio>=0.21"]
+
+[project.urls]
+Homepage = "https://github.com/darshjme-codes/atman-persist"
+Repository = "https://github.com/darshjme-codes/atman-persist"
+
+[tool.setuptools.packages.find]
+where = ["src"]
