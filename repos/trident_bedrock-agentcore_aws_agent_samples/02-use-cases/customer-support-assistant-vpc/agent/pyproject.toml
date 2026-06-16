@@ -14,7 +14,7 @@ dependencies = [
     "pydantic>=2.11.9",
     "strands-agents>=1.9.1",
     "strands-agents-tools>=0.2.8",
-    "uv>=0.8.23",
+    "uv>=0.11.15",
 ]
 
 [dependency-groups]
