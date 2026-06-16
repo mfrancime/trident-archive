@@ -8,7 +8,7 @@ absolufy-imports==0.3.1
     # via google-adk
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.13.0
+aiohttp==3.14.1
     # via litellm
 aiosignal==1.4.0
     # via aiohttp
@@ -400,7 +400,7 @@ python-dotenv==1.1.1
     #   google-adk
     #   litellm
     #   pydantic-settings
-python-multipart==0.0.20
+python-multipart==0.0.31
     # via mcp
 pyyaml==6.0.3
     # via
