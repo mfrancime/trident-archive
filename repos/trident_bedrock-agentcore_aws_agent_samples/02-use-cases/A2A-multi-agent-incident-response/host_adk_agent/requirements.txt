@@ -8,7 +8,7 @@ absolufy-imports==0.3.1
     # via google-adk
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.13.0
+aiohttp==3.14.1
     # via litellm
 aiosignal==1.4.0
     # via aiohttp
@@ -61,7 +61,7 @@ click==8.3.0
     #   uvicorn
 cloudpickle==3.1.1
     # via google-cloud-aiplatform
-cryptography==46.0.3
+cryptography==48.0.1
     # via authlib
 distro==1.9.0
     # via openai
@@ -233,7 +233,7 @@ httpx-sse==0.4.3
     #   mcp
 huggingface-hub==0.35.3
     # via tokenizers
-idna==3.11
+idna==3.15
     # via
     #   anyio
     #   httpx
@@ -400,7 +400,7 @@ python-dotenv==1.1.1
     #   google-adk
     #   litellm
     #   pydantic-settings
-python-multipart==0.0.20
+python-multipart==0.0.31
     # via mcp
 pyyaml==6.0.3
     # via
@@ -412,7 +412,7 @@ referencing==0.37.0
     #   jsonschema-specifications
 regex==2025.9.18
     # via tiktoken
-requests==2.32.5
+requests==2.33.0
     # via
     #   google-adk
     #   google-api-core
@@ -496,7 +496,7 @@ tzlocal==5.3.1
     # via google-adk
 uritemplate==4.2.0
     # via google-api-python-client
-urllib3==2.5.0
+urllib3==2.7.0
     # via
     #   bedrock-agentcore
     #   botocore
