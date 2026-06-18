@@ -7,7 +7,7 @@ requires-python = ">=3.11"
 dependencies = [
   "boto3>=1.40.23",
   "streamlit>=1.49.1",
-  "uv>=0.8.15",
+  "uv>=0.11.15",
 ]
 
 [dependency-groups]
