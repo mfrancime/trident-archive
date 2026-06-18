@@ -13,7 +13,7 @@ attrs==25.3.0
     #   cyclopts
     #   jsonschema
     #   referencing
-authlib==1.6.5
+authlib==1.6.12
     # via fastmcp
 bedrock-agentcore==0.1.6
     # via mcp-dynamodb (pyproject.toml)
@@ -35,7 +35,7 @@ charset-normalizer==3.4.3
     # via requests
 click==8.3.0
     # via uvicorn
-cryptography==46.0.2
+cryptography==48.0.1
     # via authlib
 cyclopts==3.24.0
     # via fastmcp
@@ -63,7 +63,7 @@ httpx==0.28.1
     #   mcp
 httpx-sse==0.4.1
     # via mcp
-idna==3.10
+idna==3.15
     # via
     #   anyio
     #   email-validator
@@ -149,7 +149,7 @@ python-dotenv==1.1.1
     # via
     #   fastmcp
     #   pydantic-settings
-python-multipart==0.0.20
+python-multipart==0.0.31
     # via mcp
 pyyaml==6.0.3
     # via jsonschema-path
@@ -158,7 +158,7 @@ referencing==0.36.2
     #   jsonschema
     #   jsonschema-path
     #   jsonschema-specifications
-requests==2.32.5
+requests==2.33.0
     # via jsonschema-path
 rfc3339-validator==0.1.4
     # via openapi-schema-validator
@@ -201,7 +201,7 @@ typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
-urllib3==2.5.0
+urllib3==2.7.0
     # via
     #   bedrock-agentcore
     #   botocore
