@@ -243,7 +243,7 @@
   },
   "devDependencies": {
     "@aw-web-design/x-default-browser": "1.4.126",
-    "@babel/core": "^7.28.5",
+    "@babel/core": "^7.29.6",
     "@babel/generator": "^7.28.5",
     "@babel/parser": "^7.28.5",
     "@babel/traverse": "^7.28.5",
@@ -322,7 +322,7 @@
     "globby": "^14.1.0",
     "host-validation-middleware": "^0.1.2",
     "jiti": "^2.6.1",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.2.0",
     "jsdoc-type-pratt-parser": "^4.0.0",
     "launch-editor": "^2.11.1",
     "lazy-universal-dotenv": "^4.0.0",
