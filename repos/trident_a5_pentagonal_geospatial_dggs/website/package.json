@@ -44,7 +44,7 @@
     "three": "^0.174.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.0",
+    "@babel/core": "^7.29.6",
     "@docusaurus/core": "^3.6.3",
     "@docusaurus/plugin-content-docs": "^3.6.3",
     "@docusaurus/preset-classic": "^3.6.3",
