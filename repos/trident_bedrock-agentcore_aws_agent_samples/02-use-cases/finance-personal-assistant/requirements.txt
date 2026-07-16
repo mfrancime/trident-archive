@@ -137,7 +137,7 @@ markupsafe==3.0.2
     # via jinja2
 matplotlib==3.10.6
     # via finance-assistant (pyproject.toml)
-mcp==1.13.1
+mcp==1.28.1
     # via strands-agents
 mdurl==0.1.2
     # via markdown-it-py
@@ -224,7 +224,7 @@ pydantic==2.11.7
     #   strands-agents
 pydantic-core==2.33.2
     # via pydantic
-pydantic-settings==2.10.1
+pydantic-settings==2.14.2
     # via mcp
 pygments==2.19.2
     # via rich
@@ -301,7 +301,7 @@ slack-sdk==3.36.0
     # via slack-bolt
 sniffio==1.3.1
     # via anyio
-soupsieve==2.8
+soupsieve==2.8.4
     # via beautifulsoup4
 sse-starlette==3.0.2
     # via mcp
