@@ -17,7 +17,7 @@ attrs==25.4.0
     #   referencing
 autopep8==2.3.2
     # via bedrock-agentcore-starter-toolkit
-bedrock-agentcore==0.1.7
+bedrock-agentcore==1.18.1
     # via
     #   web-search-openai-agents (pyproject.toml)
     #   bedrock-agentcore-starter-toolkit
@@ -169,7 +169,7 @@ protobuf==6.32.1
     #   proto-plus
 py-openapi-schema-to-json-schema==0.0.3
     # via bedrock-agentcore-starter-toolkit
-pyasn1==0.6.1
+pyasn1==0.6.4
     # via
     #   pyasn1-modules
     #   rsa
