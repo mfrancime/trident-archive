@@ -61,7 +61,7 @@ click==8.3.0
     #   uvicorn
 cloudpickle==3.1.1
     # via google-cloud-aiplatform
-cryptography==46.0.3
+cryptography==50.0.0
     # via authlib
 distro==1.9.0
     # via openai
@@ -446,7 +446,7 @@ sqlalchemy==2.0.44
     #   sqlalchemy-spanner
 sqlalchemy-spanner==1.17.0
     # via google-adk
-sqlparse==0.5.3
+sqlparse==0.6.0
     # via google-cloud-spanner
 sse-starlette==3.0.2
     # via mcp
