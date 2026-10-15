@@ -6,6 +6,6 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "a2a-sdk>=0.3.9",
-    "bedrock-agentcore>=1.0.0",
+    "bedrock-agentcore>=1.18.1",
     "pyyaml>=6.0.3",
 ]
