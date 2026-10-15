@@ -10,6 +10,6 @@ dependencies = [
     "httpx",
     "boto3",
     "bedrock-agentcore",
-    "litellm>=1.78.0",
+    "litellm>=1.84.0",
     "python-dotenv>=1.1.1",
 ]
