@@ -97,7 +97,7 @@ markdown-it-py==4.0.0
     # via rich
 markupsafe==3.0.3
     # via werkzeug
-mcp==1.15.0
+mcp==1.28.1
     # via fastmcp
 mdurl==0.1.2
     # via markdown-it-py
@@ -137,7 +137,7 @@ pydantic==2.11.9
     #   pydantic-settings
 pydantic-core==2.33.2
     # via pydantic
-pydantic-settings==2.11.0
+pydantic-settings==2.14.2
     # via mcp
 pygments==2.19.2
     # via rich
